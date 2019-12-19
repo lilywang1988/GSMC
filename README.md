@@ -8,14 +8,14 @@ Purpose
 
 This R package is to implement the proposed [simulation-free method for group sequential design with maxcombo tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")(GS-MC). The goal here is to improve the detection power of the weighted log-rank tests (WLRTs) when the non-proportional hazards are present. Moreover, the method is simulation-free, and allows multiple checks (interims) before ending the study.
 
-This R package is currently dependent on other R packages including [mvtnorm](https://cran.r-project.org/web/packages/mvtnorm/index.html) and my another package on github \[IAfrac\]\[1\]. I hope that this package will be improved gradually please let us know if you spot anything unclear or suspicious to you.
+This R package is currently dependent on other R packages including [mvtnorm](https://cran.r-project.org/web/packages/mvtnorm/index.html) and my another package on github [IAfrac](https://github.com/lilywang1988/IAfrac). I hope that this package will be improved gradually please let us know if you spot anything unclear or suspicious to you.
 
-For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find the README file of \[IAfrac\]\[1\].
+For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find the README file of [IAfrac](https://github.com/lilywang1988/IAfrac).
 
 Preparation
 -----------
 
-To install and use this R package from Github, you will need to install another R package "devtools" and two packages on Github: [nphsim](https://github.com/keaven/nphsim), \[IAfrac\]\[1\]. Please uncomment the codes to install them.
+To install and use this R package from Github, you will need to install another R package "devtools" and two packages on Github: [nphsim](https://github.com/keaven/nphsim), [IAfrac](https://github.com/lilywang1988/IAfrac). Please uncomment the codes to install them.
 
 ``` r
 # install.packages("devtools")
@@ -41,7 +41,7 @@ Vignette 1: sample size caulcation and plots for GS-MC (*d* or *n* vs *ϵ*)
 
 ### Caveats:
 
--   Make sure you install and activate all the packages: \[IAfrac\]\[1\] and [nphsim](https://github.com/keaven/nphsim)
+-   Make sure you install and activate all the packages: [IAfrac](https://github.com/lilywang1988/IAfrac) and [nphsim](https://github.com/keaven/nphsim)
 -   Here I only conduct prediction based on the exact survival distributions, in Vignett2, I will introduce the stochastic prediction and estimation method
 -   Two (M=2) tests are in the combo: *G*<sub>0, 0</sub>(*t*) and *G*<sub>0, 1</sub>(*t*)
 -   Two (K=2) stages are included: one interim stage and one final stage
@@ -169,11 +169,11 @@ for(eps in eps.ls){
 }
 (timecost<- (proc.time()-pt)/len) # average time usage
 #>        user      system     elapsed 
-#> 0.677000000 0.004422535 0.689887324
+#> 0.685267606 0.003873239 0.700774648
 
 # The interval when GS-MC requires the least sample size
 eps.ls[which(n_MCGS<pmin(n_FH_00_ls,n_FH_01_ls))]
-#> [1] 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10
+#> [1] 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10
 
 data_n<-c(n_MCGS,n_FH_00_ls,n_FH_01_ls)
 data_d<-c(d_MCGS,d_FH_00_ls,d_FH_01_ls)
@@ -765,4 +765,4 @@ References
 
 5.  Wang, L., Luo, X., & Zheng, C. (2019). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. arXiv preprint arXiv:1911.05684.
 
-Dependent R packages: \[1\]: <https://github.com/lilywang1988/IAfrac>
+Dependent R packages:

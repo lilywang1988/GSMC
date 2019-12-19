@@ -661,8 +661,7 @@ title
 5. Wang, L., Luo, X., & Zheng, C. (2019). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. arXiv preprint arXiv:1911.05684.
 
 Dependent R packages:
+
 [1]: https://github.com/lilywang1988/IAfrac 
-
 [2]: https://github.com/keaven/nphsim
-
 [3]: https://cran.r-project.org/web/packages/mvtnorm/index.html
