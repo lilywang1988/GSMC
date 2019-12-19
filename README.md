@@ -1,61 +1,71 @@
----
-  title: "R package GSMC: a simulation-free group sequential design with max-combo tests in the presence of non-proportional hazards"
-  author: "[Lili Wang](https://lilywang.info)"
-  date: "`r Sys.Date()`"
-  output: github_document
----
+R package GSMC: a simulation-free group sequential design with max-combo tests in the presence of non-proportional hazards
+================
+[Lili Wang](https://lilywang.info)
+2019-12-19
 
-```{r setup, include=FALSE, echo=FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                     comment = "#>",
-                     fig.width=12, fig.height=8,
-                     fig.path = "man/figures/README-")
+Purpose
+-------
 
-```
+This R package is to implement the proposed [simulation-free method for group sequential design with maxcombo tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")(GS-MC). The goal here is to improve the detection power of the weighted log-rank tests (WLRTs) when the non-proportional hazards are present. Moreover, the method is simulation-free, and allows multiple checks (interims) before ending the study.
 
-## Purpose
+This R package is currently dependent on other R packages including \[`mvtnorm`\]\[3\] and my another package on github \[`IAfrac`\]\[1\]. I hope that this package will be improved gradually please let us know if you spot anything unclear or suspicious to you.
 
-This R package is to implement the proposed [simulation-free method for group sequential design with maxcombo tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")(GS-MC). The goal here is to improve the detection power of the weighted log-rank tests (WLRTs) when the non-proportional hazards are present. Moreover, the method is simulation-free, and allows multiple checks (interims) before ending the study. 
+For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find the README file of \[`IAfrac`\]\[1\].
 
-This R package is currently dependent on other R packages including [`mvtnorm`][3] and my another package on github [`IAfrac`][1]. I hope that this package will be improved gradually please let us know if you spot anything unclear or suspicious to you. 
+Preparation
+-----------
 
-For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find the README file of [`IAfrac`][1]. 
+To install and use this R package from Github, you will need to install another R package "devtools" and two packages on Github: \[`nphsim`\]\[2\], \[`IAfrac`\]\[1\]. Please uncomment the codes to install them.
 
+    #> Loading required package: data.table
+    #> Loading required package: survival
+    #> Loading required package: survMisc
+    #> Loading required package: mvtnorm
+    #> Loading required package: Matrix
+    #> Loading required package: dplyr
+    #> 
+    #> Attaching package: 'dplyr'
+    #> The following objects are masked from 'package:data.table':
+    #> 
+    #>     between, first, last
+    #> The following objects are masked from 'package:stats':
+    #> 
+    #>     filter, lag
+    #> The following objects are masked from 'package:base':
+    #> 
+    #>     intersect, setdiff, setequal, union
+    #> Loading required package: survminer
+    #> Loading required package: ggplot2
+    #> 
+    #> Attaching package: 'ggplot2'
+    #> The following object is masked from 'package:survMisc':
+    #> 
+    #>     autoplot
+    #> Loading required package: ggpubr
+    #> Loading required package: magrittr
+    #> Loading required package: survRM2
+    #> Warning: replacing previous import 'ggplot2::autoplot' by
+    #> 'survMisc::autoplot' when loading 'nphsim'
+    #> Loading required package: gsDesign
+    #> Loading required package: xtable
+    #> 
+    #> Attaching package: 'xtable'
+    #> The following object is masked from 'package:survMisc':
+    #> 
+    #>     xtable
 
+Vignette 1: sample size caulcation and plots for GS-MC (*d* or *n* vs *ϵ*)
+--------------------------------------------------------------------------
 
-## Preparation
+### Caveats:
 
-To install and use this R package from Github, you will need to install another R package "devtools" and two packages on Github: [`nphsim`][2], [`IAfrac`][1]. Please uncomment the codes to install them. 
+-   Make sure you install and activate all the packages: \[`IAfrac`\]\[1\] and \[`nphsim`\]\[2\]
+-   Here I only conduct prediction based on the exact survival distributions, in Vignett2, I will introduce the stochastic prediction and estimation method
+-   Two (M=2) tests are in the combo: *G*<sub>0, 0</sub>(*t*) and *G*<sub>0, 1</sub>(*t*)
+-   Two (K=2) stages are included: one interim stage and one final stage
+-   The codes I used to prepare Figure 2 in the [methodology paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")
 
-```{r installation, results = "hide",echo=FALSE}
-# install.packages("devtools")
-# library(devtools)
-
-#for information and covariance calculation; sample size computation using Hasegawa proposal
-# install_github("lilywang1988/IAfrac")
-library(IAfrac) 
-
-#Generate data following nonproportional hazards
-# install_github("keaven/nphsim")
-library(nphsim) 
-
-#for information and covariance calculation; sample size computation using Hasegawa proposal
-# install_github("lilywang1988/GSMC")
-library(GSMC) 
-
-```
-
-
-
-## Vignette 1: sample size caulcation and plots for GS-MC ($d$ or $n$ vs $\epsilon$)
-### Caveats: 
-- Make sure you install and activate all the packages: [`IAfrac`][1] and [`nphsim`][2]
-- Here I only conduct prediction based on the exact survival distributions, in Vignett2, I will introduce the stochastic prediction and estimation method
-- Two (M=2) tests are in the combo: $G_{0,0}(t)$ and $G_{0,1}(t)$
-- Two (K=2) stages are included: one interim stage and one final stage
-- The codes I used to prepare Figure 2 in the [methodology paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")
-
-```{r vignette1}
+``` r
 #rm(list=ls())
 #install.packages("ggplot2")
 library(ggplot2)
@@ -68,6 +78,7 @@ omega <- (tau-R) # total follow-up time after the end of the acrrual period
 eps.ls <- seq(0,3.5,0.05) # the vector of eps (delayed time) you would like to test
 lambda <- log(2)/6 # median survival is 6 months
 (theta <- 0.6) # the hazard ratio after the change point eps is 0.6
+#> [1] 0.6
 lambda.trt <- lambda*theta # treatment effect after the change point eps
 alpha <- 0.025 # type I error
 beta <- 0.1 # type II error
@@ -81,6 +92,7 @@ gamma <- 1
 # Obtain the boundaries under for regular single variable tests (e.g. WLRT, SLRT)
 x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
 (z <- x$upper$bound)
+#> [1] 2.571839 1.992138
 
 # Preparing variables to store the results
 n_MCGS<-d_MCGS<-n_FH_00_ls<-n_FH_01_ls<-d_FH_00_ls<-d_FH_01_ls<-NULL
@@ -174,9 +186,12 @@ for(eps in eps.ls){
   
 }
 (timecost<- (proc.time()-pt)/len) # average time usage
+#>        user      system     elapsed 
+#> 0.670760563 0.003352113 0.684098592
 
 # The interval when GS-MC requires the least sample size
 eps.ls[which(n_MCGS<pmin(n_FH_00_ls,n_FH_01_ls))]
+#> [1] 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10
 
 data_n<-c(n_MCGS,n_FH_00_ls,n_FH_01_ls)
 data_d<-c(d_MCGS,d_FH_00_ls,d_FH_01_ls)
@@ -188,6 +203,11 @@ data_plot<-data.frame(data_n,data_d,index=index,eps.ls=rep(eps.ls,3))
     geom_line(size=0.75)+labs(title=expression(paste("n vs. ",epsilon)),x=expression(paste(epsilon)),y="n")+theme_light()+
     theme(plot.title = element_text(hjust = 0.5))+
     theme(legend.position = "right",legend.title = element_blank()))
+```
+
+![](man/figures/README-vignette1-1.png)
+
+``` r
 
 #ggsave("size_plot1_new.png",plot1,height=4,width=4)
 #ggsave("size_plot1_new.pdf",plot1,height=4,width=4)
@@ -196,39 +216,41 @@ data_plot<-data.frame(data_n,data_d,index=index,eps.ls=rep(eps.ls,3))
     geom_line(size=0.75)+labs(title=expression(paste("d vs. ", epsilon)),x=expression(paste(epsilon)),y="d")+theme_light()+
     theme(plot.title = element_text(hjust = 0.5))+
     theme(legend.position = "right",legend.title = element_blank()))
+```
+
+![](man/figures/README-vignette1-2.png)
+
+``` r
 
 #ggsave("size_plot2_new.png",plot2,height=4,width=4)
 #ggsave("size_plot2_new.pdf",plot2,height=4,width=4)
-
 ```
 
+Vignette 2: simulation sample for GS-MC (repeat the results in the paper!)
+--------------------------------------------------------------------------
 
+-   The codes for all the tables in the [paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!").
+-   48 different cases, with codes in form of S/E in each entry cell, where S stands for the code of the stochastic prediction method, and E stands for the code of the exact prediction method;
 
+-   Under the null hypothesis *H*<sub>0</sub>:
 
-## Vignette 2: simulation sample for GS-MC (repeat the results in the paper!)
-- The codes for all the tables in the [paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!").
-- 48 different cases, with codes in form of S/E in each entry cell, where S stands for the code of the stochastic prediction method, and E stands for the code of the exact prediction method;
+| Violations          | *θ* = 0.7 | *θ* = 0.6 | *θ* = 0.5 |
+|:--------------------|:---------:|:---------:|:---------:|
+| no violation        |    1/25   |    9/33   |   17/41   |
+| violations I&II     |    3/27   |   11/35   |   19/43   |
+| violations I&II&III |    5/29   |   13/37   |   21/45   |
+| violations I&II&IV  |    7/31   |   15/39   |   23/47   |
 
-- Under the null hypothesis $H_0$: 
+-   Under the alternative hypothesis *H*<sub>1</sub>:
 
- | Violations       | $\theta=0.7$|  $\theta=0.6$|$\theta=0.5$|
-|:---------------|:---------------:|:------:|:-----------:|
-| no violation    | 1/25| 9/33|17/41|
-| violations I&II |3/27|11/35 |19/43|
-| violations I&II&III |5/29| 13/37 | 21/45| 
-| violations I&II&IV |7/31| 15/39| 23/47 | 
+| Violations          | *θ* = 0.7 | *θ* = 0.6 | *θ* = 0.5 |
+|:--------------------|:---------:|:---------:|:---------:|
+| no violation        |    2/26   |   10/34   |   18/42   |
+| violations I&II     |    4/28   |   12/36   |   20/44   |
+| violations I&II&III |    6/30   |   14/38   |   22/46   |
+| violations I&II&IV  |    8/32   |   16/40   |   24/48   |
 
-- Under the alternative hypothesis $H_1$: 
-
- | Violations       | $\theta=0.7$|  $\theta=0.6$|$\theta=0.5$|
-|:---------------|:---------------:|:------:|:-----------:|
-| no violation    | 2/26| 10/34|18/42|
-| violations I&II |4/28| 12/36| 20/44|
-| violations I&II&III |6/30 | 14/38 | 22/46|
-| violations I&II&IV | 8/32| 16/40| 24/48 |
-
-
-```{r vignette2}
+``` r
 set.seed(123456) # set an auspicious seed, like your birthday~
 date <- "20191218" #optional for the file name
 
@@ -275,6 +297,7 @@ title <- paste0(date,"_",case)
 ## boundary calculation using the old method gsDesign for standard G(0,0) log-rank test. 
 x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
 (z <- x$upper$bound)
+#> [1] 2.571839 1.992138
 
 
 # Below is for the boundary and sample size calculation
@@ -544,82 +567,130 @@ for(l in  1:nloops){
 #close(pb)
 
 sum(!complete.cases(wlrt.interim)) 
+#> [1] 0
 sum(!complete.cases(wlrt.final)) 
+#> [1] 0
 sum(!complete.cases(slrt.interim)) 
+#> [1] 0
 sum(!complete.cases(slrt.final)) 
+#> [1] 0
 
 maxcombo.interim<-pmin(wlrt.interim,slrt.interim) # need to take the inverse sign
 maxcombo.final<-pmin(wlrt.final,slrt.final)
 
 (wi_si_cor<-cor(wlrt.interim,slrt.interim,use="complete.obs")) # wlrt.interim,slrt.interim
+#> [1] 0.8306137
 mean(wi_si_cor_est)
+#> [1] 0.8324692
 wi_si_cor_pred
+#> [1] 0.8307763
 
 (wf_sf_cor<-cor(wlrt.final,slrt.final,use="complete.obs"))     # wlrt.final,slrt.final
+#> [1] 0.850617
 mean(wf_sf_cor_est)
+#> [1] 0.8506177
 wf_sf_cor_pred
+#> [1] 0.8495938
 
 (si_sf_cor<-cor(slrt.interim,slrt.final,use="complete.obs"))   # slrt.interim,slrt.final
+#> [1] 0.7494592
 mean(si_sf_cor_est)
+#> [1] 0.7745967
 si_sf_cor_pred
+#> [1] 0.7739359
 
 (wi_wf_cor<-cor(wlrt.interim,wlrt.final,use="complete.obs"))   # wlrt.iterim,wlrt.final
+#> [1] 0.5582932
 mean(wi_wf_cor_est)
+#> [1] 0.6201073
 #mean(wi_wf_cor_est2)
 wi_wf_cor_pred
+#> [1] 0.6181095
 
 (wi_sf_cor<-cor(wlrt.interim,slrt.final,use="complete.obs"))  # wlrt.interim and slrt.final
+#> [1] 0.6086674
 mean(wi_sf_cor_est)
+#> [1] 0.6448279
 wi_sf_cor_pred
+#> [1] 0.6429676
 
 (wf_si_cor<-cor(wlrt.final,slrt.interim,use="complete.obs"))   # wlrt.final and slrt.interim
+#> [1] 0.4720651
 mean(wf_si_cor_est)
+#> [1] 0.5162032
 wf_si_cor_pred
+#> [1] 0.5135108
 
 # mi: maxcombo at interim; mf: maxcombo at final
 (mi_mf_cor<-cor(maxcombo.interim,maxcombo.final,use="complete.obs")) 
+#> [1] 0.5872469
 
 ## Good
 wi_si_cor*si_sf_cor
+#> [1] 0.622511
 wi_sf_cor
+#> [1] 0.6086674
 wi_sf_cor_pred
+#> [1] 0.6429676
 
 
 ## Good
 wi_si_cor*wi_wf_cor
+#> [1] 0.463726
 wf_si_cor
+#> [1] 0.4720651
 wf_si_cor_pred
+#> [1] 0.5135108
 
 
 
 (wlrt1<-mean(-wlrt.final>qnorm(0.025,lower.tail = F),na.rm=T)) 
+#> [1] 0.923
 (wlrt2<-1-mean((-wlrt.interim)<z[1]&(-wlrt.final)<z[2],na.rm=T)) 
+#> [1] 0.925
 (wlrt2_interim<-1-mean(-wlrt.interim<z[1],na.rm=T)) 
+#> [1] 0.399
 
 
 (slrt1<-mean(-slrt.final>qnorm(0.025,lower.tail = F),na.rm=T))
+#> [1] 0.838
 (slrt2<-1-mean((-slrt.interim)<z[1]&(-slrt.final)<z[2],na.rm=T)) 
+#> [1] 0.833
 (slrt2_interim<-1-mean(-slrt.interim<z[1],na.rm=T) )
+#> [1] 0.242
 
 
 (mc1<-mean(-maxcombo.final>qnorm(0.025,lower.tail = F),na.rm=T))
+#> [1] 0.935
 (mc2<-1-mean((-maxcombo.interim)<z[1]&(-maxcombo.final)<z[2],na.rm=T)) 
+#> [1] 0.936
 (mc2_interim<-1-mean(-maxcombo.interim<z[1],na.rm=T)) 
+#> [1] 0.431
 
 interim_pred
+#> [1] 12.3
 mean(interim_time,na.rm = T)
+#> [1] 12.35677
 final_pred
+#> [1] 18
 mean(final_time,na.rm = T)
+#> [1] 18.01599
 
 
 (mc1_pred<-mean(-maxcombo.final>z_final_alpha_pred,na.rm=T) )
+#> [1] 0.912
 (mc2_pred<-1-mean((-maxcombo.interim)<z_alpha_pred[1]&(-maxcombo.final)<z_alpha_pred[2],na.rm=T)) 
+#> [1] 0.907
 (mc2_interim_pred<-1-mean(-maxcombo.interim<z_alpha_pred[1],na.rm=T) )
+#> [1] 0.347
 
 
 (mc1_est<-mean(maxcombo.final.dec.onestep))
+#> [1] 0.912
 (mc2_est<-mean(maxcombo.interim.dec)+mean(maxcombo.final.dec)-mean(maxcombo.interim.dec*maxcombo.final.dec))
+#> [1] 0.907
 (mc2_interim_est<-mean(maxcombo.interim.dec))
+#> [1] 0.347
 
 options(digits=5)
 
@@ -638,29 +709,78 @@ out<-rbind(size_wlrt=size_FH_lower[[1]],size_slrt=size_FH_upper[[1]],n_FH,n_even
            mc1_pred,mc2_pred,mc2_interim_pred,
            mc1_est,mc2_est,mc2_interim_est)
 out
+#>                          [,1]
+#> size_wlrt          8.7200e+02
+#> size_slrt          1.1240e+03
+#> n_FH               9.2700e+02
+#> n_event_FH         5.9700e+02
+#> sum_D              6.4332e-01
+#> old_z1             2.5718e+00
+#> old_z2             1.9921e+00
+#> old_final_z        1.9600e+00
+#> z_alpha_pred1      2.7395e+00
+#> z_alpha_pred2      2.1773e+00
+#> z_final_alpha_pred 2.1353e+00
+#> z1_est_mean        2.7388e+00
+#> z2_est_mean        2.1753e+00
+#> z_final_est        2.1331e+00
+#> z1_est_sd          9.6026e-04
+#> z2_est_sd          2.0922e-03
+#> z_final_sd         9.0248e-04
+#> wi_si_cor          8.3061e-01
+#> wi_si_cor_est      8.3247e-01
+#> wi_si_cor_pred     8.3078e-01
+#> wf_sf_cor          8.5062e-01
+#> wf_sf_cor_est      8.5062e-01
+#> wf_sf_cor_pred     8.4959e-01
+#> si_sf_cor          7.4946e-01
+#> si_sf_cor_est      7.7460e-01
+#> si_sf_cor_pred     7.7394e-01
+#> wi_wf_cor          5.5829e-01
+#> wi_wf_cor_est      6.2011e-01
+#> wi_wf_cor_pred     6.1811e-01
+#> wi_sf_cor          6.0867e-01
+#> wi_sf_cor_est      6.4483e-01
+#> wi_sf_cor_pred     6.4297e-01
+#> wf_si_cor          4.7207e-01
+#> wf_si_cor_est      5.1620e-01
+#> wf_si_cor_pred     5.1351e-01
+#> mi_mf_cor          5.8725e-01
+#> interim_pred       1.2300e+01
+#> interim_time       1.2357e+01
+#> final_pred         1.8000e+01
+#> final_time         1.8016e+01
+#> wlrt1              9.2300e-01
+#> wlrt2              9.2500e-01
+#> wlrt2_interim      3.9900e-01
+#> slrt1              8.3800e-01
+#> slrt2              8.3300e-01
+#> slrt2_interim      2.4200e-01
+#> mc1                9.3500e-01
+#> mc2                9.3600e-01
+#> mc2_interim        4.3100e-01
+#> mc1_pred           9.1200e-01
+#> mc2_pred           9.0700e-01
+#> mc2_interim_pred   3.4700e-01
+#> mc1_est            9.1200e-01
+#> mc2_est            9.0700e-01
+#> mc2_interim_est    3.4700e-01
 title
+#> [1] "20191218_A1"
 #write.csv(out,paste0(title,".csv"))
-
 ```
 
+References
+----------
 
+1.  Lakatos, E. (1988). Sample sizes based on the log-rank statistic in complex clinical trials. Biometrics, 229-241.
 
+2.  Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 
+3.  Hasegawa, T. (2016). Group sequential monitoring based on the weighted log‐rank test statistic with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 15(5), 412-419.
 
+4.  Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019). Design and monitoring of survival trials in complex scenarios. Statistics in medicine, 38(2), 192-209.
 
+5.  Wang, L., Luo, X., & Zheng, C. (2019). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. arXiv preprint arXiv:1911.05684.
 
-## References
-1. Lakatos, E. (1988). Sample sizes based on the log-rank statistic in complex clinical trials. Biometrics, 229-241.
-
-2. Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
-
-3. Hasegawa, T. (2016). Group sequential monitoring based on the weighted log‐rank test statistic with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 15(5), 412-419.
-
-4. Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019). Design and monitoring of survival trials in complex scenarios. Statistics in medicine, 38(2), 192-209.
-
-5. Wang, L., Luo, X., & Zheng, C. (2019). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. arXiv preprint arXiv:1911.05684.
-
-Dependent R packages:
-[1]: https://github.com/lilywang1988/IAfrac
-[2]: https://github.com/keaven/nphsim
-[3]: https://cran.r-project.org/web/packages/mvtnorm/index.html
+Dependent R packages: \[1\]: <https://github.com/lilywang1988/IAfrac> \[2\]: <https://github.com/keaven/nphsim> \[3\]: <https://cran.r-project.org/web/packages/mvtnorm/index.html>

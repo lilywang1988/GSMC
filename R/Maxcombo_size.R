@@ -259,7 +259,7 @@ stoch_pred<-function(eps,p,b,tau,omega,lambda,theta,rho,gamma,R){
   n_sub<-floor(b*tau)
   t<-c(0,seq(1,n_sub)/b)
   h_1<-rep(lambda,(n_sub+1)) #control
-  h_2<-c(rep(lambda,min(eps*b,n_sub+1)),rep(lambda*theta,max(n_sub-eps*b+1,0))) #treatment
+  h_2<-c(rep(lambda,min(round(eps*b),n_sub+1)),rep(lambda*theta,max(n_sub-round(eps*b)+1,0))) #treatment
   N_1<-rep((1-p),(n_sub+1))
   N_2<-rep(p,(n_sub+1))
   for(i in 1:(n_sub-1)){
