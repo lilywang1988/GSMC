@@ -1,0 +1,13 @@
+Package: GSMC
+Type: Package
+Title: Group Sequential Design for Maxcombo tests
+Version: 0.1.0
+Date: 2019-12-18
+Author: Lili Wang, Xiaodong Luo, Cheng Zheng
+Maintainer: Lili Wang <lilywang@umich.edu>
+Description: This R package is to prepare group sequential eesign for maxcombo tests without conducting simulations
+License: GPL-2
+Encoding: UTF-8
+RoxygenNote: 6.1.1
+Depends: mvtnorm, gsDesign
+Suggests: nphsim, IAfrac
