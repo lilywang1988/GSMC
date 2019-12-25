@@ -235,7 +235,7 @@ date <- "20191218" #optional for the file name
 server_num=2 #any value from 1 to 48 to indicate the 48 different combinations of scenario and methods, for details please check the two tables above. 
 
 hypo<-c("alt","null")[server_num%%2+1] #"null" or "alt".
-nloops <- c(1000,5000)[server_num%%2+1]  # 2e5 under the null; 5e4 under the alternative in the paper, here use a smaller number for demonstration (1000 for H1, 5000 for H0, to make life easier)
+nloops <- c(10000,50000)[server_num%%2+1]  # suugest using 2e5 under the null; 5e4 under the alternative in the paper, here use a smaller number for demonstration (10,000 for H1, 50,000 for H0, to make life easier)
 # Rule of thumb: 
 #number of simualtions: recommend using >50,000 for type I error, >10,000 for type II error
 case<-paste0(c("N","A","NC","AC","NS","AS","NT","AT"),rep(1:6,each=8))[server_num] #length=48

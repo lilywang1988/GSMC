@@ -169,7 +169,7 @@ for(eps in eps.ls){
 }
 (timecost<- (proc.time()-pt)/len) # average time usage
 #>        user      system     elapsed 
-#> 0.685267606 0.003873239 0.700774648
+#> 0.682253521 0.005492958 0.697521127
 
 # The interval when GS-MC requires the least sample size
 eps.ls[which(n_MCGS<pmin(n_FH_00_ls,n_FH_01_ls))]
@@ -239,7 +239,7 @@ date <- "20191218" #optional for the file name
 server_num=2 #any value from 1 to 48 to indicate the 48 different combinations of scenario and methods, for details please check the two tables above. 
 
 hypo<-c("alt","null")[server_num%%2+1] #"null" or "alt".
-nloops <- c(1000,5000)[server_num%%2+1]  # 2e5 under the null; 5e4 under the alternative in the paper, here use a smaller number for demonstration (1000 for H1, 5000 for H0, to make life easier)
+nloops <- c(10000,50000)[server_num%%2+1]  # suugest using 2e5 under the null; 5e4 under the alternative in the paper, here use a smaller number for demonstration (10,000 for H1, 50,000 for H0, to make life easier)
 # Rule of thumb: 
 #number of simualtions: recommend using >50,000 for type I error, >10,000 for type II error
 case<-paste0(c("N","A","NC","AC","NS","AS","NT","AT"),rep(1:6,each=8))[server_num] #length=48
@@ -561,118 +561,118 @@ maxcombo.interim<-pmin(wlrt.interim,slrt.interim) # need to take the inverse sig
 maxcombo.final<-pmin(wlrt.final,slrt.final)
 
 (wi_si_cor<-cor(wlrt.interim,slrt.interim,use="complete.obs")) # wlrt.interim,slrt.interim
-#> [1] 0.8306137
+#> [1] 0.8302514
 mean(wi_si_cor_est)
-#> [1] 0.8324692
+#> [1] 0.8323751
 wi_si_cor_pred
 #> [1] 0.8307763
 
 (wf_sf_cor<-cor(wlrt.final,slrt.final,use="complete.obs"))     # wlrt.final,slrt.final
-#> [1] 0.850617
+#> [1] 0.8513941
 mean(wf_sf_cor_est)
-#> [1] 0.8506177
+#> [1] 0.850556
 wf_sf_cor_pred
 #> [1] 0.8495938
 
 (si_sf_cor<-cor(slrt.interim,slrt.final,use="complete.obs"))   # slrt.interim,slrt.final
-#> [1] 0.7494592
+#> [1] 0.777648
 mean(si_sf_cor_est)
 #> [1] 0.7745967
 si_sf_cor_pred
 #> [1] 0.7739359
 
 (wi_wf_cor<-cor(wlrt.interim,wlrt.final,use="complete.obs"))   # wlrt.iterim,wlrt.final
-#> [1] 0.5582932
+#> [1] 0.6205095
 mean(wi_wf_cor_est)
-#> [1] 0.6201073
+#> [1] 0.620059
 #mean(wi_wf_cor_est2)
 wi_wf_cor_pred
 #> [1] 0.6181095
 
 (wi_sf_cor<-cor(wlrt.interim,slrt.final,use="complete.obs"))  # wlrt.interim and slrt.final
-#> [1] 0.6086674
+#> [1] 0.6426304
 mean(wi_sf_cor_est)
-#> [1] 0.6448279
+#> [1] 0.644755
 wi_sf_cor_pred
 #> [1] 0.6429676
 
 (wf_si_cor<-cor(wlrt.final,slrt.interim,use="complete.obs"))   # wlrt.final and slrt.interim
-#> [1] 0.4720651
+#> [1] 0.5213978
 mean(wf_si_cor_est)
-#> [1] 0.5162032
+#> [1] 0.516105
 wf_si_cor_pred
 #> [1] 0.5135108
 
 # mi: maxcombo at interim; mf: maxcombo at final
 (mi_mf_cor<-cor(maxcombo.interim,maxcombo.final,use="complete.obs")) 
-#> [1] 0.5872469
+#> [1] 0.6491688
 
 ## Good
 wi_si_cor*si_sf_cor
-#> [1] 0.622511
+#> [1] 0.6456433
 wi_sf_cor
-#> [1] 0.6086674
+#> [1] 0.6426304
 wi_sf_cor_pred
 #> [1] 0.6429676
 
 
 ## Good
 wi_si_cor*wi_wf_cor
-#> [1] 0.463726
+#> [1] 0.5151789
 wf_si_cor
-#> [1] 0.4720651
+#> [1] 0.5213978
 wf_si_cor_pred
 #> [1] 0.5135108
 
 
 
 (wlrt1<-mean(-wlrt.final>qnorm(0.025,lower.tail = F),na.rm=T)) 
-#> [1] 0.923
+#> [1] 0.9107
 (wlrt2<-1-mean((-wlrt.interim)<z[1]&(-wlrt.final)<z[2],na.rm=T)) 
-#> [1] 0.925
+#> [1] 0.911
 (wlrt2_interim<-1-mean(-wlrt.interim<z[1],na.rm=T)) 
-#> [1] 0.399
+#> [1] 0.4062
 
 
 (slrt1<-mean(-slrt.final>qnorm(0.025,lower.tail = F),na.rm=T))
-#> [1] 0.838
-(slrt2<-1-mean((-slrt.interim)<z[1]&(-slrt.final)<z[2],na.rm=T)) 
 #> [1] 0.833
+(slrt2<-1-mean((-slrt.interim)<z[1]&(-slrt.final)<z[2],na.rm=T)) 
+#> [1] 0.8256
 (slrt2_interim<-1-mean(-slrt.interim<z[1],na.rm=T) )
-#> [1] 0.242
+#> [1] 0.2446
 
 
 (mc1<-mean(-maxcombo.final>qnorm(0.025,lower.tail = F),na.rm=T))
-#> [1] 0.935
+#> [1] 0.9262
 (mc2<-1-mean((-maxcombo.interim)<z[1]&(-maxcombo.final)<z[2],na.rm=T)) 
-#> [1] 0.936
+#> [1] 0.9249
 (mc2_interim<-1-mean(-maxcombo.interim<z[1],na.rm=T)) 
-#> [1] 0.431
+#> [1] 0.434
 
 interim_pred
 #> [1] 12.3
 mean(interim_time,na.rm = T)
-#> [1] 12.35677
+#> [1] 12.39335
 final_pred
 #> [1] 18
 mean(final_time,na.rm = T)
-#> [1] 18.01599
+#> [1] 18.04584
 
 
 (mc1_pred<-mean(-maxcombo.final>z_final_alpha_pred,na.rm=T) )
-#> [1] 0.912
+#> [1] 0.8988
 (mc2_pred<-1-mean((-maxcombo.interim)<z_alpha_pred[1]&(-maxcombo.final)<z_alpha_pred[2],na.rm=T)) 
-#> [1] 0.907
+#> [1] 0.8933
 (mc2_interim_pred<-1-mean(-maxcombo.interim<z_alpha_pred[1],na.rm=T) )
-#> [1] 0.347
+#> [1] 0.3682
 
 
 (mc1_est<-mean(maxcombo.final.dec.onestep))
-#> [1] 0.912
+#> [1] 0.899
 (mc2_est<-mean(maxcombo.interim.dec)+mean(maxcombo.final.dec)-mean(maxcombo.interim.dec*maxcombo.final.dec))
-#> [1] 0.907
+#> [1] 0.8936
 (mc2_interim_est<-mean(maxcombo.interim.dec))
-#> [1] 0.347
+#> [1] 0.3683
 
 options(digits=5)
 
@@ -704,49 +704,49 @@ out
 #> z_alpha_pred2      2.1773e+00
 #> z_final_alpha_pred 2.1353e+00
 #> z1_est_mean        2.7388e+00
-#> z2_est_mean        2.1753e+00
-#> z_final_est        2.1331e+00
-#> z1_est_sd          9.6026e-04
-#> z2_est_sd          2.0922e-03
-#> z_final_sd         9.0248e-04
-#> wi_si_cor          8.3061e-01
-#> wi_si_cor_est      8.3247e-01
+#> z2_est_mean        2.1754e+00
+#> z_final_est        2.1332e+00
+#> z1_est_sd          9.4386e-04
+#> z2_est_sd          1.9991e-03
+#> z_final_sd         8.8817e-04
+#> wi_si_cor          8.3025e-01
+#> wi_si_cor_est      8.3238e-01
 #> wi_si_cor_pred     8.3078e-01
-#> wf_sf_cor          8.5062e-01
-#> wf_sf_cor_est      8.5062e-01
+#> wf_sf_cor          8.5139e-01
+#> wf_sf_cor_est      8.5056e-01
 #> wf_sf_cor_pred     8.4959e-01
-#> si_sf_cor          7.4946e-01
+#> si_sf_cor          7.7765e-01
 #> si_sf_cor_est      7.7460e-01
 #> si_sf_cor_pred     7.7394e-01
-#> wi_wf_cor          5.5829e-01
-#> wi_wf_cor_est      6.2011e-01
+#> wi_wf_cor          6.2051e-01
+#> wi_wf_cor_est      6.2006e-01
 #> wi_wf_cor_pred     6.1811e-01
-#> wi_sf_cor          6.0867e-01
-#> wi_sf_cor_est      6.4483e-01
+#> wi_sf_cor          6.4263e-01
+#> wi_sf_cor_est      6.4475e-01
 #> wi_sf_cor_pred     6.4297e-01
-#> wf_si_cor          4.7207e-01
-#> wf_si_cor_est      5.1620e-01
+#> wf_si_cor          5.2140e-01
+#> wf_si_cor_est      5.1611e-01
 #> wf_si_cor_pred     5.1351e-01
-#> mi_mf_cor          5.8725e-01
+#> mi_mf_cor          6.4917e-01
 #> interim_pred       1.2300e+01
-#> interim_time       1.2357e+01
+#> interim_time       1.2393e+01
 #> final_pred         1.8000e+01
-#> final_time         1.8016e+01
-#> wlrt1              9.2300e-01
-#> wlrt2              9.2500e-01
-#> wlrt2_interim      3.9900e-01
-#> slrt1              8.3800e-01
-#> slrt2              8.3300e-01
-#> slrt2_interim      2.4200e-01
-#> mc1                9.3500e-01
-#> mc2                9.3600e-01
-#> mc2_interim        4.3100e-01
-#> mc1_pred           9.1200e-01
-#> mc2_pred           9.0700e-01
-#> mc2_interim_pred   3.4700e-01
-#> mc1_est            9.1200e-01
-#> mc2_est            9.0700e-01
-#> mc2_interim_est    3.4700e-01
+#> final_time         1.8046e+01
+#> wlrt1              9.1070e-01
+#> wlrt2              9.1100e-01
+#> wlrt2_interim      4.0620e-01
+#> slrt1              8.3300e-01
+#> slrt2              8.2560e-01
+#> slrt2_interim      2.4460e-01
+#> mc1                9.2620e-01
+#> mc2                9.2490e-01
+#> mc2_interim        4.3400e-01
+#> mc1_pred           8.9880e-01
+#> mc2_pred           8.9330e-01
+#> mc2_interim_pred   3.6820e-01
+#> mc1_est            8.9900e-01
+#> mc2_est            8.9360e-01
+#> mc2_interim_est    3.6830e-01
 title
 #> [1] "20191218_A1"
 #write.csv(out,paste0(title,".csv"))
