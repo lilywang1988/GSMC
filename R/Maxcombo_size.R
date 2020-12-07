@@ -1,8 +1,6 @@
 # Author: Lili Wang
-# Date: 20190823
-# Modified: 20190917
-n.rep=5
-#' Boundary calculation for GS-MC
+# Modified: 20201206
+#' Boundary calculation for GSMC
 #'
 #' Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
 #'
@@ -11,6 +9,7 @@ n.rep=5
 #' @param Sigma0 Correlation matrix for all the test statistics.
 #' @param index Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
 #' @param alpha_sp Vector of errors to spend up to each stage.
+#' @param n.rep number of repeats to take the median for output
 #' @return
 #' \item{z_alpha}{Boundary values for all the stages.}
 #' \item{z_alpha_vec}{Boundary values for all the test statistics correponding to index. }
@@ -76,31 +75,58 @@ n.rep=5
 #' # final stage
 #' pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
 #' 1-alpha_sp[5]
-
-
 #library(mvtnorm)  # 1.0-10 version (dependent)
 #old name is Maxcombo_bound
-Maxcombo.bd<-function(Sigma0,index,alpha_sp){
-  K=length(alpha_sp)
-  if(length(unique(index))!=K){stop("Error: The index should be consistent with the length of alpha_sp!")}
-  if(any(diff(alpha_sp)<=0)) stop("Error: alpha_sp should be monotone (strictly) increasing!")
-  if(any(diff(index)<0)) stop("Error: index should be monotone increasing!")
-  z_alpha<-NULL
-  z_alpha_vec<-NULL # a repeat vector to record the test statistic for each intex
-  for(k in 1:K){
-    use_index=which(index<=k)
-    Sigma0_use<-Sigma0[use_index,use_index]
-    if(k==1){
-      z_alpha[1]=median(replicate(n.rep,qmvnorm(1-alpha_sp[k],tail="lower.tail",corr=Sigma0_use)$quantile))
-    }else{
-      z2_search<-function(z){
-        median(replicate(n.rep,pmvnorm(upper=c(z_alpha_vec,rep(z,sum(index==k))),corr=Sigma0_use)-(1-alpha_sp[k])))
-      }
-      z_alpha[k]=uniroot(f=z2_search,interval=c(1,z_alpha[k-1]))$root
+Maxcombo.bd <- function(
+  Sigma0, 
+  index, 
+  alpha_sp, 
+  n.rep = 5
+  ){
+  K  <- length(alpha_sp)
+  if(length(unique(index)) != K){
+    stop("Error: The index should be consistent with the length of alpha_sp!")
     }
-    z_alpha_vec=c(z_alpha_vec,rep(z_alpha[k],sum(index==k)))
+  if(any(diff(alpha_sp) <= 0)) 
+    stop("Error: alpha_sp should be monotone (strictly) increasing!")
+  if(any(diff(index) < 0)) 
+    stop("Error: index should be monotone increasing!")
+  z_alpha <- NULL
+  z_alpha_vec <- NULL # a repeat vector to record the test statistic for each intex
+  for(k in 1:K){
+    use_index <- which(index <= k)
+    Sigma0_use <- Sigma0[use_index, use_index]
+    if(k == 1){
+      z_alpha[1] <- median(
+        replicate(
+          n.rep,
+          qmvnorm(1 - alpha_sp[k],
+                  tail = "lower.tail",
+                  corr = Sigma0_use)$quantile
+          )
+        )
+    }else{
+      z2_search <- function(z){
+        median(
+          replicate(
+            n.rep,
+            pmvnorm(
+              upper = c(
+                z_alpha_vec, 
+                rep(z, sum(index == k))
+                ), 
+              corr = Sigma0_use
+              ) - (1-alpha_sp[k])
+            )
+          )
+      }
+      z_alpha[k] <- uniroot(
+        f = z2_search, 
+        interval = c(1, z_alpha[k - 1]))$root
+    }
+    z_alpha_vec = c(z_alpha_vec,rep(z_alpha[k],sum(index==k)))
   }
-  return(list(z_alpha=z_alpha,z_alpha_vec=z_alpha_vec))
+  return(list(z_alpha = z_alpha, z_alpha_vec = z_alpha_vec))
 }
 
 #' Sample size calculation
@@ -118,6 +144,7 @@ Maxcombo.bd<-function(Sigma0,index,alpha_sp){
 #' @param R End of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.
 #' @param n_range The range ot the expected patient numbers.
 #' @param sum_D Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).
+#' @param n.rep number of repeats to take the median for output
 #' @return
 #' \item{n}{The number of patients needed for the trial to achieve the predefined power.}
 #' \item{d}{The number of events needed for the trial to achieve the predefined power.}
@@ -160,13 +187,29 @@ Maxcombo.bd<-function(Sigma0,index,alpha_sp){
 #'
 #'
 #'
-Maxcombo.sz<-function(Sigma1,mu1,z_alpha_vec,beta,interim_vec,R,n_range,sum_D){
-search_n<-function(n){
-  median(replicate(n.rep,pmvnorm(cor=Sigma1,upper=z_alpha_vec-sqrt(n*pmin(interim_vec/R,1))*mu1)-(beta)))
+Maxcombo.sz <- function(
+  Sigma1, 
+  mu1, 
+  z_alpha_vec, 
+  beta, 
+  interim_vec, 
+  R, 
+  n_range, 
+  sum_D, 
+  n.rep = 5){
+search_n <- function(n){
+  median(
+    replicate(
+      n.rep,
+      pmvnorm(
+        cor = Sigma1, 
+        upper = z_alpha_vec - sqrt(n * pmin(interim_vec / R, 1)) * mu1) - (beta)
+      )
+    )
 }
-n=ceiling(uniroot(f=search_n,interval = n_range)$root)
-d=ceiling(n*sum_D)
-return(list(n=n,d=d,sum_D=sum_D))
+n = ceiling(uniroot(f = search_n, interval = n_range)$root)
+d = ceiling(n * sum_D)
+return(list(n = n, d = d, sum_D = sum_D))
 }
 
 #' The type II errors/Powers for a range of sample sizes
@@ -176,6 +219,7 @@ return(list(n=n,d=d,sum_D=sum_D))
 #' @inheritParams Maxcombo.sz
 #' @param n_seq The sequence of number of patients.
 #' @param d_seq The sequence of number of expected events.
+#' @param n.rep number of repeats to take the median for output
 #' @author Lili Wang
 #' @seealso \code{\link{Maxcombo.sz}}
 #' @examples
@@ -220,13 +264,50 @@ return(list(n=n,d=d,sum_D=sum_D))
 #' 
 #'
 #'
-Maxcombo.beta.n <- function(Sigma1,mu1,z_alpha_vec,interim_vec,R,n_seq){
-  sapply(n_seq,function(n){median(replicate(n.rep,pmvnorm(cor=Sigma1,upper=z_alpha_vec-sqrt(n*pmin(interim_vec/R,1))*mu1)[[1]]))})
-
+Maxcombo.beta.n <- function(
+  Sigma1, 
+  mu1, 
+  z_alpha_vec, 
+  interim_vec, 
+  R,
+  n_seq, 
+  n.rep = 5
+  ){
+  sapply(
+    n_seq, 
+    function(n){
+      median(
+        replicate(
+          n.rep,
+          pmvnorm(
+            cor = Sigma1, 
+            upper = z_alpha_vec - sqrt(n * pmin(interim_vec / R, 1)) * mu1
+          )[[1]]))
+      }
+    )
 }
 #' @rdname Maxcombo.beta.n
-Maxcombo.beta.d <- function(Sigma1,mu1,z_alpha_vec,interim_vec,R,d_seq,sum_D){
-  sapply(d_seq,function(d){median(replicate(n.rep,pmvnorm(cor=Sigma1,upper=z_alpha_vec-sqrt(d/sum_D*pmin(interim_vec/R,1))*mu1)[[1]]))})
+Maxcombo.beta.d <- function(
+  Sigma1,
+  mu1,
+  z_alpha_vec,
+  interim_vec,
+  R,
+  d_seq,
+  sum_D, 
+  n.rep = 5
+  ){
+  sapply(d_seq, function(d){
+    median(
+      replicate(
+        n.rep,
+        pmvnorm(
+          cor = Sigma1,
+          upper = z_alpha_vec - 
+            sqrt(d / sum_D * pmin(interim_vec / R, 1)) * mu1)[[1]])
+      )
+    }
+  )
 }
 
 
@@ -255,67 +336,105 @@ Maxcombo.beta.d <- function(Sigma1,mu1,z_alpha_vec,interim_vec,R,d_seq,sum_D){
 #' @author Lili Wang
 #' @references Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 #'
-stoch_pred<-function(eps,p,b,tau,omega,lambda,theta,rho,gamma,R){
-  n_sub<-floor(b*tau)
-  t<-c(0,seq(1,n_sub)/b)
-  h_1<-rep(lambda,(n_sub+1)) #control
-  h_2<-c(rep(lambda,min(round(eps*b),n_sub+1)),rep(lambda*theta,max(n_sub-round(eps*b)+1,0))) #treatment
-  N_1<-rep((1-p),(n_sub+1))
-  N_2<-rep(p,(n_sub+1))
-  for(i in 1:(n_sub-1)){
-    N_1[i+1]<-N_1[i]*(1-h_1[i]/b-(t[i]>omega)/b/(tau-t[i]))
-    N_2[i+1]<-N_2[i]*(1-h_2[i]/b-(t[i]>omega)/b/(tau-t[i]))
+stoch_pred<-function(eps, p, b, tau, omega, lambda, theta, rho, gamma, R){
+  n_sub <- floor(b * tau)
+  t <- c(0, seq(1, n_sub) / b)
+  h_1 <- rep(lambda, (n_sub + 1)) #control
+  h_2 <- c(
+    rep(lambda, min(round(eps * b), n_sub + 1)),
+    rep(lambda * theta, max(n_sub - round(eps * b) + 1, 0))
+    ) #treatment
+  N_1 <- rep((1 - p),(n_sub + 1))
+  N_2 <- rep(p, (n_sub + 1))
+  for(i in 1:(n_sub - 1)){
+    N_1[i + 1] <- N_1[i] * (1 - h_1[i] / b-(t[i] > omega) / b / (tau - t[i]))
+    N_2[i + 1] <- N_2[i] * (1 - h_2[i] / b-(t[i] > omega) / b / (tau - t[i]))
   }
-  N_1[n_sub+1]<-N_2[n_sub+1]<-0
+  N_1[n_sub + 1] <- N_2[n_sub + 1] <- 0
   
-  f_S_1<-function(x) exp(-lambda*x)
-  f_S_2<-function(x) (x<eps)*exp(-lambda*x)+(x>=eps)*exp(-(lambda*eps+lambda*theta*(x-eps)))
+  f_S_1 <- function(x) exp( - lambda * x)
+  f_S_2 <- function(x) (x < eps) * exp( - lambda * x) +
+    (x >= eps) * exp( - (lambda * eps + lambda * theta * (x - eps)))
   #f_S_2_2<-function(x) (x<eps)*exp(-lambda*x)+(x>=eps)*exp(-eps*lambda.trt*(1/theta-1))*exp(-lambda.trt*x)
-  S_1<-f_S_1(t)
-  S_2<-f_S_2(t)
-  S<-(1-p)*S_1+p*S_2
-  D<-(h_1*N_1+h_2*N_2)/b*min(tau/R,1) #predicted total events at each time
-  theta_seq<-h_2/h_1
-  phi<-N_2/N_1
-  r<-S^rho*(1-S)^gamma
-  num_vec<-D*r*(phi*theta_seq/(1+phi*theta_seq)-phi/(1+phi))
-  den_vec<-D*r^2*phi/(1+phi)^2
-  E.star_num<-sum(num_vec[1:n_sub])
-  E.star_den<-sqrt(sum(den_vec[1:n_sub]))
-  E.star<-E.star_num/E.star_den
+  S_1 <- f_S_1(t)
+  S_2 <- f_S_2(t)
+  S <- (1 - p) * S_1 + p * S_2
+  D <- (h_1 * N_1 + h_2 * N_2) / b * min(tau / R, 1) #predicted total events at each time
+  theta_seq <- h_2 / h_1
+  phi <- N_2 / N_1
+  r <- S^rho * (1 - S)^gamma
+  num_vec <- D * r * (phi * theta_seq/(1 + phi * theta_seq)-phi / (1 + phi))
+  den_vec <- D * r^2 * phi / (1 + phi)^2
+  E.star_num <- sum(num_vec[1:n_sub])
+  E.star_den <- sqrt(sum(den_vec[1:n_sub]))
+  E.star <- E.star_num / E.star_den
   #time_vec=seq(1,n_sub)/b)
-  return(list(sum_D=sum(D[1:n_sub]),inf=sum(den_vec[1:n_sub]), E.star=E.star, trt_vs_ctrl_N=phi[1:n_sub], t_vec=seq(1,n_sub)/b))
+  return(
+    list(
+      sum_D = sum(D[1:n_sub]),
+      inf = sum(den_vec[1:n_sub]), 
+      E.star = E.star, 
+      trt_vs_ctrl_N = phi[1:n_sub], 
+      t_vec = seq(1, n_sub) / b
+      )
+    )
 }
 #' 
 #' 
 #' @rdname stoch_pred
 #' 
-stoch_pred.cov<-function(eps,p,b,tau,omega,lambda,theta,rho1,gamma1,rho2,gamma2,R){
-  n_sub<-floor(b*tau)
-  t<-c(0,seq(1,n_sub)/b)
-  h_1<-rep(lambda,(n_sub+1)) #control
-  h_2<-c(rep(lambda,min(eps*b,n_sub+1)),rep(lambda*theta,max(n_sub-eps*b+1,0))) #treatment
-  N_1<-rep((1-p),(n_sub+1))
-  N_2<-rep(p,(n_sub+1))
-  for(i in 1:(n_sub-1)){
-    N_1[i+1]<-N_1[i]*(1-h_1[i]/b-(t[i]>omega)/b/(tau-t[i]))
-    N_2[i+1]<-N_2[i]*(1-h_2[i]/b-(t[i]>omega)/b/(tau-t[i]))
+stoch_pred.cov<-function(
+  eps, 
+  p, 
+  b, 
+  tau, 
+  omega, 
+  lambda, 
+  theta, 
+  rho1, 
+  gamma1, 
+  rho2, 
+  gamma2, 
+  R
+  ){
+  n_sub <- floor(b * tau)
+  t <- c(0, seq(1, n_sub) / b)
+  h_1 <- rep(lambda, (n_sub + 1)) #control
+  h_2 <- c(
+    rep(lambda, min(eps * b,n_sub + 1)), 
+    rep(lambda * theta, max(n_sub - eps * b+1, 0))
+    ) #treatment
+  N_1 <- rep((1 - p),(n_sub + 1))
+  N_2 <- rep(p, (n_sub + 1))
+  for(i in 1:(n_sub - 1)){
+    N_1[i + 1] <- N_1[i] * (1 - h_1[i] / b - (t[i] > omega) / b / (tau - t[i]))
+    N_2[i + 1] <- N_2[i] * (1 - h_2[i] / b - (t[i] > omega) / b / (tau - t[i]))
   }
-  N_1[n_sub+1]<-N_2[n_sub+1]<-0
+  N_1[n_sub + 1] <- N_2[n_sub + 1] <- 0
   
-  f_S_1<-function(x) exp(-lambda*x)
-  f_S_2<-function(x) (x<eps)*exp(-lambda*x)+(x>=eps)*exp(-(lambda*eps+lambda*theta*(x-eps)))
+  f_S_1 <- function(x) exp( - lambda * x)
+  f_S_2 <- function(x) (x < eps) * exp( - lambda * x)+
+                     (x >= eps) * exp( - (lambda * eps + lambda * theta * (x - eps)))
   #f_S_2_2<-function(x) (x<eps)*exp(-lambda*x)+(x>=eps)*exp(-eps*lambda.trt*(1/theta-1))*exp(-lambda.trt*x)
-  S_1<-f_S_1(t)
-  S_2<-f_S_2(t)
-  S<-(1-p)*S_1+p*S_2
-  D<-(h_1*N_1+h_2*N_2)/b*min(tau/R,1) #predicted total events at each time
-  theta_seq<-h_2/h_1
-  phi<-N_2/N_1
-  r1<-S^rho1*(1-S)^gamma1
-  r2<-S^rho2*(1-S)^gamma2
-  den_vec<-D*r1*r2*phi/(1+phi)^2
+  S_1 <- f_S_1(t)
+  S_2 <- f_S_2(t)
+  S <- (1 - p) * S_1 + p * S_2
+  #predicted total events at each time
+  D <- (h_1 * N_1 + h_2 * N_2) / b * min(tau / R, 1) 
+  
+  theta_seq <- h_2 / h_1
+  phi <- N_2 / N_1
+  r1 <- S^rho1 * (1 - S)^gamma1
+  r2 <- S^rho2 * (1 - S)^gamma2
+  den_vec <- D * r1 * r2 * phi / (1 + phi)^2
   #time_vec=seq(1,n_sub)/b)
-  return(list(sum_D=sum(D[1:n_sub]),cov=sum(den_vec[1:n_sub]), trt_vs_ctrl_N=phi[1:n_sub], t_vec=seq(1,n_sub)/b))
+  return(
+    list(
+      sum_D = sum(D[1:n_sub]),
+      cov = sum(den_vec[1:n_sub]), 
+      trt_vs_ctrl_N = phi[1:n_sub], 
+      t_vec = seq(1, n_sub) / b
+      )
+    )
 }
 

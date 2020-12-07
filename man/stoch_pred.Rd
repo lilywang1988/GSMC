@@ -7,8 +7,20 @@
 \usage{
 stoch_pred(eps, p, b, tau, omega, lambda, theta, rho, gamma, R)
 
-stoch_pred.cov(eps, p, b, tau, omega, lambda, theta, rho1, gamma1, rho2,
-  gamma2, R)
+stoch_pred.cov(
+  eps,
+  p,
+  b,
+  tau,
+  omega,
+  lambda,
+  theta,
+  rho1,
+  gamma1,
+  rho2,
+  gamma2,
+  R
+)
 }
 \arguments{
 \item{eps}{Delayed treatment effect time.}

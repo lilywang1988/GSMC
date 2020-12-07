@@ -5,9 +5,18 @@
 \alias{Maxcombo.beta.d}
 \title{The type II errors/Powers for a range of sample sizes}
 \usage{
-Maxcombo.beta.n(Sigma1, mu1, z_alpha_vec, interim_vec, R, n_seq)
+Maxcombo.beta.n(Sigma1, mu1, z_alpha_vec, interim_vec, R, n_seq, n.rep = 5)
 
-Maxcombo.beta.d(Sigma1, mu1, z_alpha_vec, interim_vec, R, d_seq, sum_D)
+Maxcombo.beta.d(
+  Sigma1,
+  mu1,
+  z_alpha_vec,
+  interim_vec,
+  R,
+  d_seq,
+  sum_D,
+  n.rep = 5
+)
 }
 \arguments{
 \item{Sigma1}{The correlation matrix under the alternative hypothesis.}
@@ -21,6 +30,8 @@ Maxcombo.beta.d(Sigma1, mu1, z_alpha_vec, interim_vec, R, d_seq, sum_D)
 \item{R}{End of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.}
 
 \item{n_seq}{The sequence of number of patients.}
+
+\item{n.rep}{number of repeats to take the median for output}
 
 \item{d_seq}{The sequence of number of expected events.}
 

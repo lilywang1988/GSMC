@@ -2,9 +2,9 @@
 % Please edit documentation in R/Maxcombo_size.R
 \name{Maxcombo.bd}
 \alias{Maxcombo.bd}
-\title{Boundary calculation for GS-MC}
+\title{Boundary calculation for GSMC}
 \usage{
-Maxcombo.bd(Sigma0, index, alpha_sp)
+Maxcombo.bd(Sigma0, index, alpha_sp, n.rep = 5)
 }
 \arguments{
 \item{Sigma0}{Correlation matrix for all the test statistics.}
@@ -12,6 +12,8 @@ Maxcombo.bd(Sigma0, index, alpha_sp)
 \item{index}{Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.}
 
 \item{alpha_sp}{Vector of errors to spend up to each stage.}
+
+\item{n.rep}{number of repeats to take the median for output}
 }
 \value{
 \item{z_alpha}{Boundary values for all the stages.}
@@ -19,6 +21,9 @@ Maxcombo.bd(Sigma0, index, alpha_sp)
 }
 \description{
 Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
+}
+\details{
+
 }
 \examples{
   #install.packages("gsDesign")
