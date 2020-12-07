@@ -55,7 +55,7 @@ alpha=0.025
 beta=0.1
 # If there are two stages (K=2), with on interim stage and a final stage
 # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60\% of events have been observed. The error spending function used below is O'Brien-Fleming.
-x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 (z <- x$upper$bound)
 x
 Sigma0_v<-rep(0.5,6)

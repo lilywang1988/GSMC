@@ -79,7 +79,7 @@ rho <- 0
 gamma <- 1
 
 # Obtain the boundaries under for regular single variable tests (e.g. WLRT, SLRT)
-x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
+x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
 (z <- x$upper$bound)
 
 # Preparing variables to store the results
@@ -273,7 +273,7 @@ lambda_star=log(2)/12
 # The title for the record of the output csv file
 title <- paste0(date,"_",case)
 ## boundary calculation using the old method gsDesign for standard G(0,0) log-rank test. 
-x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
+x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
 (z <- x$upper$bound)
 
 
