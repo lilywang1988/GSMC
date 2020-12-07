@@ -1,7 +1,7 @@
 Package: GSMC
 Type: Package
 Title: Group Sequential Design for Maxcombo tests
-Version: 0.1.0
+Version: 0.1.1
 Date: 2020-12-06
 Author: Lili Wang, Xiaodong Luo, Cheng Zheng
 Maintainer: Lili Wang <lilywang@umich.edu>

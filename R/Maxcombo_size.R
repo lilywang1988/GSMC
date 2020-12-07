@@ -21,7 +21,7 @@
 #'   beta=0.1
 #'   # If there are two stages (K=2), with on interim stage and a final stage
 #'   # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
-#'   x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#'   x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #'   (z <- x$upper$bound)
 #'   x
 #'   Sigma0_v<-rep(0.5,6)
@@ -34,18 +34,18 @@
 #'
 #'   zz$z_alpha # boundary value for each stage
 #'   zz$z_alpha_vec # boundary value for each test statistic correponding to index
-#'   pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]]
+#'   mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]]
 #'   1-alpha_interim
-#'   1-pmvnorm(upper =zz$z_alpha_vec,corr=Sigma0)[[1]]
+#'   1-mvtnorm::pmvnorm(upper =zz$z_alpha_vec,corr=Sigma0)[[1]]
 #'   alpha
 #'   # What if we do not consider interim stage but with only a final stage? (K=1)
 #'   zz1<-Maxcombo.bd(Sigma0 = Sigma0[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))
-#'   pmvnorm(upper=rep(zz1$z_alpha,2),corr=Sigma0[1:2,1:2])[[1]]
+#'   mvtnorm::pmvnorm(upper=rep(zz1$z_alpha,2),corr=Sigma0[1:2,1:2])[[1]]
 #'   1-alpha
 #'   # This function will also fit 2 or any number of interims (K>=3)
 #'   # Let there are 3 stages, Let us try controlling the error spent at each stage.
 #'   stage_p<-c(0.5,0.7,0.8,0.9)
-#'   x <- gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#'   x <- gsDesign::gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #'   (z <- x$upper$bound)
 #'   alpha_sp<- cumsum(x$upper$prob[,1]) # the theoretical cumulative errors spent at each stage
 #' # 2 tests per stage
@@ -60,20 +60,20 @@
 #' zz$z_alpha # boundary value for each stage
 #' zz$z_alpha_vec # boundary value for each test statistic correponding to index
 #' # interim 1
-#' pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]] # expected error spent at this stage
+#' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]] # expected error spent at this stage
 #' 1-alpha_sp[1] #compare with the expected error spent at this stage
 #' # above two rows are very close to each other, same for the following pairs.
 #' # interim 2
-#' pmvnorm(upper=rep(zz$z_alpha[1:2],each=2),corr=Sigma0[1:4,1:4])[[1]]
+#' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:2],each=2),corr=Sigma0[1:4,1:4])[[1]]
 #' 1-alpha_sp[2]
 #' # interim 3
-#' pmvnorm(upper=rep(zz$z_alpha[1:3],each=2),corr=Sigma0[1:6,1:6])[[1]]
+#' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:3],each=2),corr=Sigma0[1:6,1:6])[[1]]
 #' 1-alpha_sp[3]
 #' # interim 4
-#' pmvnorm(upper=rep(zz$z_alpha[1:4],each=2),corr=Sigma0[1:8,1:8])[[1]]
+#' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:4],each=2),corr=Sigma0[1:8,1:8])[[1]]
 #' 1-alpha_sp[4]
 #' # final stage
-#' pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
+#' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
 #' 1-alpha_sp[5]
 #library(mvtnorm)  # 1.0-10 version (dependent)
 #old name is Maxcombo_bound
@@ -110,7 +110,7 @@ Maxcombo.bd <- function(
         median(
           replicate(
             n.rep,
-            pmvnorm(
+            mvtnorm::pmvnorm(
               upper = c(
                 z_alpha_vec, 
                 rep(z, sum(index == k))
@@ -161,7 +161,7 @@ Maxcombo.bd <- function(
 #' beta=0.1
 #' # If there are two stages (K=2), with on interim stage and a final stage
 #' # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
-#' x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#' x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #' (z <- x$upper$bound)
 #' x
 #' Sigma0_v<-rep(0.5,6)
@@ -201,7 +201,7 @@ search_n <- function(n){
   median(
     replicate(
       n.rep,
-      pmvnorm(
+      mvtnorm::pmvnorm(
         cor = Sigma1, 
         upper = z_alpha_vec - sqrt(n * pmin(interim_vec / R, 1)) * mu1) - (beta)
       )
@@ -231,7 +231,7 @@ return(list(n = n, d = d, sum_D = sum_D))
 #' beta=0.1
 #' # If there are two stages (K=2), with on interim stage and a final stage
 #' # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
-#' x <- gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#' x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #' (z <- x$upper$bound)
 #' x
 #' Sigma0_v<-rep(0.5,6)
@@ -279,7 +279,7 @@ Maxcombo.beta.n <- function(
       median(
         replicate(
           n.rep,
-          pmvnorm(
+          mvtnorm::pmvnorm(
             cor = Sigma1, 
             upper = z_alpha_vec - sqrt(n * pmin(interim_vec / R, 1)) * mu1
           )[[1]]))
@@ -301,7 +301,7 @@ Maxcombo.beta.d <- function(
     median(
       replicate(
         n.rep,
-        pmvnorm(
+        mvtnorm::pmvnorm(
           cor = Sigma1,
           upper = z_alpha_vec - 
             sqrt(d / sum_D * pmin(interim_vec / R, 1)) * mu1)[[1]])
