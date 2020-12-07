@@ -4,7 +4,17 @@
 \alias{Maxcombo.sz}
 \title{Sample size calculation}
 \usage{
-Maxcombo.sz(Sigma1, mu1, z_alpha_vec, beta, interim_vec, R, n_range, sum_D)
+Maxcombo.sz(
+  Sigma1,
+  mu1,
+  z_alpha_vec,
+  beta,
+  interim_vec,
+  R,
+  n_range,
+  sum_D,
+  n.rep = 5
+)
 }
 \arguments{
 \item{Sigma1}{The correlation matrix under the alternative hypothesis.}
@@ -22,6 +32,8 @@ Maxcombo.sz(Sigma1, mu1, z_alpha_vec, beta, interim_vec, R, n_range, sum_D)
 \item{n_range}{The range ot the expected patient numbers.}
 
 \item{sum_D}{Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
+
+\item{n.rep}{number of repeats to take the median for output}
 }
 \value{
 \item{n}{The number of patients needed for the trial to achieve the predefined power.}
