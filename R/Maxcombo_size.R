@@ -1,10 +1,10 @@
 # Author: Lili Wang
 # Modified: 20201206
 #' Boundary calculation for GSMC
-#'
+#' 
 #' Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
 #'
-#' For example, when there are 2 stages (1 interm, 1 final), and two tests for a max-combo in each stage, then we have 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. The goals is to ensure that \eqn{P(Z_{11}<z_1,Z_{12}<z_1})=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1},Z_{21}<z_2,Z_{22}<z_2)=\alpha}.Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \equn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be indentical to the order of rows or coloumns in \code{Sigma0}, in this example \code{index} should be \code{c(1,1,2,2)}.\code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to each stage.
+#' For example, when there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. The goals is to ensure that \eqn{P(Z_{11}<z_1,Z_{12}<z_1})=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1},Z_{21}<z_2,Z_{22}<z_2)=\alpha}.Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be indentical to the order of rows or coloumns in \code{Sigma0}, in this example \code{index} should be \code{c(1,1,2,2)}.\code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to each stage.
 #'
 #' @param Sigma0 Correlation matrix for all the test statistics.
 #' @param index Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
@@ -20,7 +20,7 @@
 #'   alpha=0.025
 #'   beta=0.1
 #'   # If there are two stages (K=2), with on interim stage and a final stage
-#'   # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
+#'   # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O\'Brien-Fleming.
 #'   x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #'   (z <- x$upper$bound)
 #'   x
@@ -137,7 +137,7 @@ Maxcombo.bd <- function(
 #'
 #'
 #' @param Sigma1 The correlation matrix under the alternative hypothesis.
-#' @param mu1 The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \equn{E^*} in Hasegawa 2014 paper. ).
+#' @param mu1 The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \eqn{E^*} in Hasegawa 2014 paper. ).
 #' @param z_alpha_vec Same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.
 #' @param beta Type II error.
 #' @param interim_vec The vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.

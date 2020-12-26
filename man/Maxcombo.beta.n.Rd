@@ -21,7 +21,7 @@ Maxcombo.beta.d(
 \arguments{
 \item{Sigma1}{The correlation matrix under the alternative hypothesis.}
 
-\item{mu1}{The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \equn{E^*} in Hasegawa 2014 paper. ).}
+\item{mu1}{The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \eqn{E^*} in Hasegawa 2014 paper. ).}
 
 \item{z_alpha_vec}{Same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.}
 
