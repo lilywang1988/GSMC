@@ -3,7 +3,7 @@
 \name{Maxcombo.beta.n}
 \alias{Maxcombo.beta.n}
 \alias{Maxcombo.beta.d}
-\title{The type II errors/Powers for a range of sample sizes}
+\title{The power for a vector of sample sizes}
 \usage{
 Maxcombo.beta.n(Sigma1, mu1, z_alpha_vec, interim_vec, R, n_seq, n.rep = 5)
 
@@ -38,50 +38,19 @@ Maxcombo.beta.d(
 \item{sum_D}{Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
 }
 \description{
-To obtain a spectrum of powers or type II errors for a range of sample sizes n or d
+To obtain a spectrum of power for a vector of numbers of subjects (n) using \code{Maxcombo.beta.n} or events (d) using \code{Maxcombo.beta.d}.
 }
 \examples{
-#install.packages("mvtnorm")
-#library(mvtnorm)
-#install.packages("gsDesign")
-#library(gsDesign)
-alpha=0.025
-beta=0.1
-# If there are two stages (K=2), with on interim stage and a final stage
-# First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60\% of events have been observed. The error spending function used below is O'Brien-Fleming.
-x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
-(z <- x$upper$bound)
-x
 Sigma0_v<-rep(0.5,6)
 Sigma0<-matrix(1, ncol=4,nrow=4)
 Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(Sigma0)]
 Sigma0
-alpha_interim<-pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-zz<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
+alpha_stage <- c(0.01,0.025) # The error you would like to spend at the interim stage
+zz <- Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=alpha_stage)
 zz$z_alpha # boundary value for each stage
-zz$z_alpha_vec # boundary value for each test statistic correponding to index
-# Correlation matrix under the alternative hypothesis
-Sigma1_v<-rep(0.5,6)
-Sigma1<-matrix(1, ncol=4,nrow=4)
-Sigma1[upper.tri(Sigma1)]<- Sigma1_v
-Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]
-Sigma1
-# Define mu1
-mu1=c(0.1,0.1,0.2,0.2)
-# Obtain the sample size
-Maxcombo.sz(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,beta=0.1,interim_vec=c(10,10,18,18),R=14,n_range=c(100,1000),sum_D=0.6)
-# need 232 patients, 140 deaths
-
-#Obatain the spectrum of powers or type II errors in the input range
-power_n<-1-Maxcombo.beta.n(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,interim_vec=c(10,10,18,18),R=14,n_seq=seq(100,1000,50))
-plot(x=seq(100,1000,50),y=power_n,type="l",col=1,lwd=2,main=expression(paste(1-beta," vs n")),ylab = expression(paste(1-beta)),xlab="n"     )
-power_d<-1-Maxcombo.beta.n(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,interim_vec=c(10,10,18,18),R=14,n_seq=seq(60,600,30))
-plot(x=seq(60,600,30),y=power_d,type="l",col=1,lwd=2,main=expression(paste(1-beta," vs d")),ylab = expression(paste(1-beta)),xlab="d"     )
-
-
-
-
+zz$z_alpha_vec # boundary value for each test statistic corresponding 
+to the index
 }
 \seealso{
 \code{\link{Maxcombo.sz}}

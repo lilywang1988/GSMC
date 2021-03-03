@@ -1,53 +1,93 @@
 # Author: Lili Wang
-# Modified: 20201206
+# Modified: 20210302
+#
 #' Boundary calculation for GSMC
 #' 
 #' Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
 #'
-#' For example, when there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. The goals is to ensure that \eqn{P(Z_{11}<z_1,Z_{12}<z_1})=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1},Z_{21}<z_2,Z_{22}<z_2)=\alpha}.Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be indentical to the order of rows or coloumns in \code{Sigma0}, in this example \code{index} should be \code{c(1,1,2,2)}.\code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to each stage.
+#' Suppose there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have totally 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. Controlling the type I error is equivalent to ensuring that \eqn{P(Z_{11}<z_1,Z_{12}<z_1})=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1},Z_{21}<z_2,Z_{22}<z_2)=\alpha} are both satisfied. Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be identical to the order of rows or columns in \code{Sigma0}.  Specifically, in this example, \code{index} should be \code{c(1,1,2,2)}. \code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to every stage.
 #'
 #' @param Sigma0 Correlation matrix for all the test statistics.
 #' @param index Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
-#' @param alpha_sp Vector of errors to spend up to each stage.
-#' @param n.rep number of repeats to take the median for output
+#' @param alpha_sp Vector of cumulative errors to spend up to each stage.
+#' @param n.rep number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5. 
 #' @return
 #' \item{z_alpha}{Boundary values for all the stages.}
-#' \item{z_alpha_vec}{Boundary values for all the test statistics correponding to index. }
+#' \item{z_alpha_vec}{Boundary values for all the test statistics following the \code{index}. }
 #' @author Lili Wang
+#' @references 
+#' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 #' @examples
 #'   #install.packages("gsDesign")
 #'   library(gsDesign)
 #'   alpha=0.025
 #'   beta=0.1
 #'   # If there are two stages (K=2), with on interim stage and a final stage
-#'   # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O\'Brien-Fleming.
-#'   x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#'   # First we obtain the errors spent at each stage to be identical to the
+#'    ones from regular interim analysis assuming that the interim stage
+#'     happened at 60% of events have been observed. The error spending
+#'      function used below is O\'Brien-Fleming.
+#'   x <- gsDesign::gsDesign(
+#'   k = 2, 
+#'   test.type = 1, 
+#'   timing = 0.6, 
+#'   sfu = "OF", 
+#'   alpha = alpha, 
+#'   beta = beta,
+#'   delta = -log(0.7))
 #'   (z <- x$upper$bound)
 #'   x
-#'   Sigma0_v<-rep(0.5,6)
-#'   Sigma0<-matrix(1, ncol=4,nrow=4)
-#'   Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-#'   Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+#'   Sigma0_v <- rep(0.5, 6)
+#'   Sigma0 <- matrix(1, ncol = 4, nrow = 4)
+#'   Sigma0[upper.tri(Sigma0)] <- Sigma0_v
+#'   Sigma0[lower.tri(Sigma0)] <- t(Sigma0)[lower.tri(t(Sigma0))]
 #'   Sigma0
-#'   alpha_interim<-pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-#'   zz<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
-#'
-#'   zz$z_alpha # boundary value for each stage
-#'   zz$z_alpha_vec # boundary value for each test statistic correponding to index
-#'   mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]]
+#'   # The error you would like to spend at the interim stage:
+#'   alpha_interim <- pnorm(z[1],lower.tail = F) 
+#'   
+#'   zz <- Maxcombo.bd(
+#'   Sigma0 = Sigma0,
+#'   index = c(1, 1, 2, 2),
+#'   alpha_sp = c(alpha_interim, alpha))
+#'   
+#'  
+#'   # boundary value for each stage
+#'   zz$z_alpha 
+#'   # boundary value for each test statistic correponding to index
+#'   zz$z_alpha_vec 
+#'   mvtnorm::pmvnorm(
+#'   upper = rep(zz$z_alpha[1], 2),
+#'   corr = Sigma0[1:2,1:2]
+#'   )[[1]]
+#'   
 #'   1-alpha_interim
-#'   1-mvtnorm::pmvnorm(upper =zz$z_alpha_vec,corr=Sigma0)[[1]]
+#'   1-mvtnorm::pmvnorm(
+#'   upper = zz$z_alpha_vec,
+#'   corr = Sigma0
+#'   )[[1]]
+#'   
 #'   alpha
-#'   # What if we do not consider interim stage but with only a final stage? (K=1)
-#'   zz1<-Maxcombo.bd(Sigma0 = Sigma0[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))
-#'   mvtnorm::pmvnorm(upper=rep(zz1$z_alpha,2),corr=Sigma0[1:2,1:2])[[1]]
+#'   # What if we do not consider interim stage but with only a final stage? 
+#'   zz1 <- Maxcombo.bd(
+#'   Sigma0 = Sigma0[3:4,3:4],
+#'   index = c(1,1),
+#'   alpha_sp = c(alpha)
+#'   )
+#'   mvtnorm::pmvnorm(
+#'   upper = rep(zz1$z_alpha, 2),
+#'   corr = Sigma0[1:2, 1:2]
+#'   )[[1]]
+#'   
 #'   1-alpha
 #'   # This function will also fit 2 or any number of interims (K>=3)
-#'   # Let there are 3 stages, Let us try controlling the error spent at each stage.
-#'   stage_p<-c(0.5,0.7,0.8,0.9)
-#'   x <- gsDesign::gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#'   # Let there are 3 stages, Let us try controlling the error spent 
+#'   at each stage.
+#'   stage_p <- c(0.5,0.7,0.8,0.9)
+#'   x <- gsDesign::gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", 
+#'   alpha=alpha, beta=beta,delta=-log(0.7))
 #'   (z <- x$upper$bound)
-#'   alpha_sp<- cumsum(x$upper$prob[,1]) # the theoretical cumulative errors spent at each stage
+#'   alpha_sp<- cumsum(x$upper$prob[,1]) # the theoretical cumulative
+#'    errors spent at each stage
 #' # 2 tests per stage
 #' Sigma0_v<-rep(0.5,choose(10,2))
 #' Sigma0<-matrix(1, ncol=10,nrow=10)
@@ -153,14 +193,17 @@ Maxcombo.bd <- function(
 #' @references Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 #' @seealso \code{\link{Maxcombo.beta.n}}
 #' @examples
-#' #install.packages("mvtnorm")
+#' # install.packages("mvtnorm")
 #' library(mvtnorm)
-#' #install.packages("gsDesign")
+#' # install.packages("gsDesign")
 #' library(gsDesign)
-#' alpha=0.025
-#' beta=0.1
-#' # If there are two stages (K=2), with on interim stage and a final stage
-#' # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
+#' alpha <- 0.025
+#' beta <- 0.1
+#' # If there are two stages (K = 2), with on interim stage and a final stage
+#' # First we obtain the errors spent at each stage to be identical to the ones
+#'  from regular interim analysis assuming that the interim stage happened at
+#'   60% of events have been observed. The error spending function used below
+#'    is O'Brien-Fleming.
 #' x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
 #' (z <- x$upper$bound)
 #' x
@@ -169,8 +212,8 @@ Maxcombo.bd <- function(
 #' Sigma0[upper.tri(Sigma0)]<- Sigma0_v
 #' Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
 #' Sigma0
-#' alpha_interim<-pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-#' zz<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
+#' alpha_interim <- pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
+#' zz <- Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
 #' zz$z_alpha # boundary value for each stage
 #' zz$z_alpha_vec # boundary value for each test statistic correponding to index
 #' # Correlation matrix under the alternative hypothesis
@@ -212,9 +255,9 @@ d = ceiling(n * sum_D)
 return(list(n = n, d = d, sum_D = sum_D))
 }
 
-#' The type II errors/Powers for a range of sample sizes
+#' The power for a vector of sample sizes
 #'
-#' To obtain a spectrum of powers or type II errors for a range of sample sizes n or d
+#' To obtain a spectrum of power for a vector of numbers of subjects (n) using \code{Maxcombo.beta.n} or events (d) using \code{Maxcombo.beta.d}. 
 #'
 #' @inheritParams Maxcombo.sz
 #' @param n_seq The sequence of number of patients.
@@ -223,47 +266,16 @@ return(list(n = n, d = d, sum_D = sum_D))
 #' @author Lili Wang
 #' @seealso \code{\link{Maxcombo.sz}}
 #' @examples
-#' #install.packages("mvtnorm")
-#' #library(mvtnorm)
-#' #install.packages("gsDesign")
-#' #library(gsDesign)
-#' alpha=0.025
-#' beta=0.1
-#' # If there are two stages (K=2), with on interim stage and a final stage
-#' # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60% of events have been observed. The error spending function used below is O'Brien-Fleming.
-#' x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
-#' (z <- x$upper$bound)
-#' x
 #' Sigma0_v<-rep(0.5,6)
 #' Sigma0<-matrix(1, ncol=4,nrow=4)
 #' Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-#' Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+#' Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(Sigma0)]
 #' Sigma0
-#' alpha_interim<-pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-#' zz<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
+#' alpha_stage <- c(0.01,0.025) # The error you would like to spend at the interim stage
+#' zz <- Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=alpha_stage)
 #' zz$z_alpha # boundary value for each stage
-#' zz$z_alpha_vec # boundary value for each test statistic correponding to index
-#' # Correlation matrix under the alternative hypothesis
-#' Sigma1_v<-rep(0.5,6)
-#' Sigma1<-matrix(1, ncol=4,nrow=4)
-#' Sigma1[upper.tri(Sigma1)]<- Sigma1_v
-#' Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]
-#' Sigma1
-#' # Define mu1
-#' mu1=c(0.1,0.1,0.2,0.2)
-#' # Obtain the sample size
-#' Maxcombo.sz(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,beta=0.1,interim_vec=c(10,10,18,18),R=14,n_range=c(100,1000),sum_D=0.6)
-#' # need 232 patients, 140 deaths
-#'
-#' #Obatain the spectrum of powers or type II errors in the input range
-#' power_n<-1-Maxcombo.beta.n(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,interim_vec=c(10,10,18,18),R=14,n_seq=seq(100,1000,50))
-#' plot(x=seq(100,1000,50),y=power_n,type="l",col=1,lwd=2,main=expression(paste(1-beta," vs n")),ylab = expression(paste(1-beta)),xlab="n"     )
-#' power_d<-1-Maxcombo.beta.n(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,interim_vec=c(10,10,18,18),R=14,n_seq=seq(60,600,30))
-#' plot(x=seq(60,600,30),y=power_d,type="l",col=1,lwd=2,main=expression(paste(1-beta," vs d")),ylab = expression(paste(1-beta)),xlab="d"     )
-#' 
-#' 
-#'
-#'
+#' zz$z_alpha_vec # boundary value for each test statistic corresponding 
+#' to the index
 Maxcombo.beta.n <- function(
   Sigma1, 
   mu1, 
@@ -313,14 +325,14 @@ Maxcombo.beta.d <- function(
 
 
 
-#' A stochastic-process way of prediction
+#' A stochastic prediction results
 #'
-#' A stochastic-process way of prediction of the expected event counts, mean difference, and the information(variance) or the covariance
+#' A stochastic-process way of prediction of the expected event ratio (\eqn{D}), mean difference (\eqn{\mu}), and the information(variance) using \code{stoch_pred} or the covariance using \code{stoch_pred.cov}.
 #'
 #' @param eps Delayed treatment effect time.
 #' @param p Probability of treatment assignment.
-#' @param b The number of subintervals at each time point.
-#' @param omega The minimum follow-up time for all the patients.  Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. Through our simulation tests, we found that this function is quite robust to violations of these assumptions: dropouts, different cenosring rates for two  arms, and changing accrual rates.
+#' @param b The number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.
+#' @param omega The minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. 
 #' @param lambda The hazard for the control group.
 #' @param theta The hazard ratio after the delayed time \code{eps} for the treatment arm.
 #' @param rho,rho1,rho2 The first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
@@ -328,14 +340,16 @@ Maxcombo.beta.d <- function(
 #' @param R The accrual period. 
 #' 
 #' @return 
-#' \item{sum_D}{The mean expected event ratio, multiplied by \code{n}, the sample size, it is equal to the stochastically predicted number of events. }
-#' \item{inf or covariance}{The information/variance or covariance (averaged for each subject) , should multiplied by \code{n}, which is the sample size to obtain the stochastically predicted information. }
-#' \item{E.star}{The unit mean, correspoinding to \eqn{E^*} in Hasegawa(2014)}
-#' \item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresonding to the time vector \code{t_vec}.}
+#' \item{sum_D}{The mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
+#' \item{inf or covariance}{The information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
+#' \item{E.star}{The unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of fomula (8) in Wang et al(2021).}
+#' \item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
 #' \item{t_vec}{The time sequence corresponding to \code{trt_vs_ctrl_N}.}
 #' @author Lili Wang
-#' @references Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
-#'
+#' @references 
+#' Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135. 
+#' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
+#' 
 stoch_pred<-function(eps, p, b, tau, omega, lambda, theta, rho, gamma, R){
   n_sub <- floor(b * tau)
   t <- c(0, seq(1, n_sub) / b)
