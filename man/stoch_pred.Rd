@@ -3,7 +3,7 @@
 \name{stoch_pred}
 \alias{stoch_pred}
 \alias{stoch_pred.cov}
-\title{A stochastic-process way of prediction}
+\title{A stochastic prediction results}
 \usage{
 stoch_pred(eps, p, b, tau, omega, lambda, theta, rho, gamma, R)
 
@@ -27,9 +27,9 @@ stoch_pred.cov(
 
 \item{p}{Probability of treatment assignment.}
 
-\item{b}{The number of subintervals at each time point.}
+\item{b}{The number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.}
 
-\item{omega}{The minimum follow-up time for all the patients.  Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. Through our simulation tests, we found that this function is quite robust to violations of these assumptions: dropouts, different cenosring rates for two  arms, and changing accrual rates.}
+\item{omega}{The minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}.}
 
 \item{lambda}{The hazard for the control group.}
 
@@ -40,17 +40,18 @@ stoch_pred.cov(
 \item{R}{The accrual period.}
 }
 \value{
-\item{sum_D}{The mean expected event ratio, multiplied by \code{n}, the sample size, it is equal to the stochastically predicted number of events. }
-\item{inf or covariance}{The information/variance or covariance (averaged for each subject) , should multiplied by \code{n}, which is the sample size to obtain the stochastically predicted information. }
-\item{E.star}{The unit mean, correspoinding to \eqn{E^*} in Hasegawa(2014)}
-\item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresonding to the time vector \code{t_vec}.}
+\item{sum_D}{The mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
+\item{inf or covariance}{The information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
+\item{E.star}{The unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of fomula (8) in Wang et al(2021).}
+\item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
 \item{t_vec}{The time sequence corresponding to \code{trt_vs_ctrl_N}.}
 }
 \description{
-A stochastic-process way of prediction of the expected event counts, mean difference, and the information(variance) or the covariance
+A stochastic-process way of prediction of the expected event ratio (\eqn{D}), mean difference (\eqn{\mu}), and the information(variance) using \code{stoch_pred} or the covariance using \code{stoch_pred.cov}.
 }
 \references{
-Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
+Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135. 
+Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 }
 \author{
 Lili Wang

@@ -11,13 +11,13 @@ Maxcombo.bd(Sigma0, index, alpha_sp, n.rep = 5)
 
 \item{index}{Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.}
 
-\item{alpha_sp}{Vector of errors to spend up to each stage.}
+\item{alpha_sp}{Vector of cumulative errors to spend up to each stage.}
 
-\item{n.rep}{number of repeats to take the median for output}
+\item{n.rep}{number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5.}
 }
 \value{
 \item{z_alpha}{Boundary values for all the stages.}
-\item{z_alpha_vec}{Boundary values for all the test statistics correponding to index. }
+\item{z_alpha_vec}{Boundary values for all the test statistics following the \code{index}. }
 }
 \description{
 Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
@@ -31,34 +31,71 @@ Boundary calculation for interim analysis with max-combo tests based on correlat
   alpha=0.025
   beta=0.1
   # If there are two stages (K=2), with on interim stage and a final stage
-  # First we obtain the errors spent at each stage to be identical to the ones from regular interim analysis assuming that the interim stage happened at 60\% of events have been observed. The error spending function used below is O\'Brien-Fleming.
-  x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+  # First we obtain the errors spent at each stage to be identical to the
+   ones from regular interim analysis assuming that the interim stage
+    happened at 60\% of events have been observed. The error spending
+     function used below is O\'Brien-Fleming.
+  x <- gsDesign::gsDesign(
+  k = 2, 
+  test.type = 1, 
+  timing = 0.6, 
+  sfu = "OF", 
+  alpha = alpha, 
+  beta = beta,
+  delta = -log(0.7))
   (z <- x$upper$bound)
   x
-  Sigma0_v<-rep(0.5,6)
-  Sigma0<-matrix(1, ncol=4,nrow=4)
-  Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-  Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+  Sigma0_v <- rep(0.5, 6)
+  Sigma0 <- matrix(1, ncol = 4, nrow = 4)
+  Sigma0[upper.tri(Sigma0)] <- Sigma0_v
+  Sigma0[lower.tri(Sigma0)] <- t(Sigma0)[lower.tri(t(Sigma0))]
   Sigma0
-  alpha_interim<-pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-  zz<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
-
-  zz$z_alpha # boundary value for each stage
-  zz$z_alpha_vec # boundary value for each test statistic correponding to index
-  mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1],2),corr=Sigma0[1:2,1:2])[[1]]
+  # The error you would like to spend at the interim stage:
+  alpha_interim <- pnorm(z[1],lower.tail = F) 
+  
+  zz <- Maxcombo.bd(
+  Sigma0 = Sigma0,
+  index = c(1, 1, 2, 2),
+  alpha_sp = c(alpha_interim, alpha))
+  
+ 
+  # boundary value for each stage
+  zz$z_alpha 
+  # boundary value for each test statistic correponding to index
+  zz$z_alpha_vec 
+  mvtnorm::pmvnorm(
+  upper = rep(zz$z_alpha[1], 2),
+  corr = Sigma0[1:2,1:2]
+  )[[1]]
+  
   1-alpha_interim
-  1-mvtnorm::pmvnorm(upper =zz$z_alpha_vec,corr=Sigma0)[[1]]
+  1-mvtnorm::pmvnorm(
+  upper = zz$z_alpha_vec,
+  corr = Sigma0
+  )[[1]]
+  
   alpha
-  # What if we do not consider interim stage but with only a final stage? (K=1)
-  zz1<-Maxcombo.bd(Sigma0 = Sigma0[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))
-  mvtnorm::pmvnorm(upper=rep(zz1$z_alpha,2),corr=Sigma0[1:2,1:2])[[1]]
+  # What if we do not consider interim stage but with only a final stage? 
+  zz1 <- Maxcombo.bd(
+  Sigma0 = Sigma0[3:4,3:4],
+  index = c(1,1),
+  alpha_sp = c(alpha)
+  )
+  mvtnorm::pmvnorm(
+  upper = rep(zz1$z_alpha, 2),
+  corr = Sigma0[1:2, 1:2]
+  )[[1]]
+  
   1-alpha
   # This function will also fit 2 or any number of interims (K>=3)
-  # Let there are 3 stages, Let us try controlling the error spent at each stage.
-  stage_p<-c(0.5,0.7,0.8,0.9)
-  x <- gsDesign::gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+  # Let there are 3 stages, Let us try controlling the error spent 
+  at each stage.
+  stage_p <- c(0.5,0.7,0.8,0.9)
+  x <- gsDesign::gsDesign(k=5, test.type=1, timing=stage_p, sfu="OF", 
+  alpha=alpha, beta=beta,delta=-log(0.7))
   (z <- x$upper$bound)
-  alpha_sp<- cumsum(x$upper$prob[,1]) # the theoretical cumulative errors spent at each stage
+  alpha_sp<- cumsum(x$upper$prob[,1]) # the theoretical cumulative
+   errors spent at each stage
 # 2 tests per stage
 Sigma0_v<-rep(0.5,choose(10,2))
 Sigma0<-matrix(1, ncol=10,nrow=10)
@@ -86,6 +123,9 @@ mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:4],each=2),corr=Sigma0[1:8,1:8])[[1]]
 # final stage
 mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
 1-alpha_sp[5]
+}
+\references{
+Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 }
 \author{
 Lili Wang
