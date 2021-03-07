@@ -37,6 +37,8 @@ stoch_pred.cov(
 
 \item{rho, rho1, rho2}{The first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
 
+\item{gamma, gamma1, gamma2}{The second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
+
 \item{R}{The accrual period.}
 }
 \value{

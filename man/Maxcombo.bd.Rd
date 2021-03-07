@@ -23,9 +23,10 @@ Maxcombo.bd(Sigma0, index, alpha_sp, n.rep = 5)
 Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
 }
 \details{
-
+Suppose there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have totally 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. Controlling the type I error is equivalent to ensuring that \eqn{P(Z_{11}<z_1,Z_{12}<z_1)=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1,Z_{21}<z_2,Z_{22}<z_2)=\alpha} are both satisfied. Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be identical to the order of rows or columns in \code{Sigma0}.  Specifically, in this example, \code{index} should be \code{c(1,1,2,2)}. \code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to every stage.
 }
 \examples{
+ \dontrun{
   #install.packages("gsDesign")
   library(gsDesign)
   alpha=0.025
@@ -123,6 +124,7 @@ mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:4],each=2),corr=Sigma0[1:8,1:8])[[1]]
 # final stage
 mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
 1-alpha_sp[5]
+ }
 }
 \references{
 Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.

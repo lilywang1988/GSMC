@@ -46,6 +46,67 @@ Sample size calculation to control the type II error or the power of an interim 
 \details{
 Assume that there are 2 stages (1 interm, 1 final), and two tests for a max-combo in each stage, then we have 4 test statistics, and the two cutoff values for the two stages have been determined by \code{Maxcombo.bd} in advance using their correlation matrix and the error spending function \eqn{\alpha_1, \alpha}. The goal of this function is to control the sample size n (number of patients for both arms) or d (observed events) to achieve the ideal type II error \eqn{\beta} or the power (\eqn{1-\beta}), i.e. \eqn{\P(Z_{11}<z_1,Z_{12}<z_1,Z_{21}<z_2,Z_{22}<z_2)=\beta}.
 }
+\examples{
+\dontrun{
+# install.packages("mvtnorm")
+library(mvtnorm)
+# install.packages("gsDesign")
+library(gsDesign)
+alpha <- 0.025
+beta <- 0.1
+# If there are two stages (K = 2), with on interim stage and a final stage
+# First we obtain the errors spent at each stage to be identical to the ones
+ from regular interim analysis assuming that the interim stage happened at
+  60\% of events have been observed. The error spending function used below
+   is O\'Brien-Fleming.
+x <- gsDesign::gsDesign(
+k = 2, 
+test.type = 1, 
+timing = 0.6, 
+sfu = "OF", 
+alpha = alpha, 
+beta = beta,
+delta = -log(0.7)
+)
+(z <- x$upper$bound)
+x
+Sigma0_v <- rep(0.5,6)
+Sigma0 <- matrix(1, ncol = 4, nrow = 4)
+Sigma0[upper.tri(Sigma0)]<- Sigma0_v
+Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+Sigma0
+alpha_interim <- pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
+zz <- Maxcombo.bd(
+Sigma0 = Sigma0,
+index = c(1, 1, 2, 2),
+alpha_sp = c(alpha_interim,alpha)
+)
+zz$z_alpha # boundary value for each stage
+zz$z_alpha_vec # boundary value for each test statistic correponding to index
+# Correlation matrix under the alternative hypothesis
+Sigma1_v<-rep(0.5,6)
+Sigma1<-matrix(1, ncol=4,nrow=4)
+Sigma1[upper.tri(Sigma1)]<- Sigma1_v
+Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]
+Sigma1
+# Define mu1
+mu1=c(0.1,0.1,0.2,0.2)
+# Obtain the sample size
+Maxcombo.sz(
+Sigma1 = Sigma1,
+mu1 = mu1,
+z_alpha_vec = zz$z_alpha_vec,
+beta = 0.1,
+interim_vec=c(10,10,18,18),
+R = 14,
+n_range = c(100,1000),
+sum_D = 0.6)
+# need 232 patients, 140 deaths
+}
+
+
+
+}
 \references{
 Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 }
