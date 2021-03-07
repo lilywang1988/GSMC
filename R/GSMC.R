@@ -1,11 +1,44 @@
+#' @docType package
+#' @name  GSMC
 #' @import stats
+#' @import data.table
 #' @import gsDesign
-#' @import mvtnorm
 #' @importFrom mvtnorm pmvnorm
+#' @export GSMC_design
 #' @export Maxcombo.bd
 #' @export Maxcombo.sz
 #' @export Maxcombo.beta.n
 #' @export Maxcombo.beta.d
 #' @export stoch_pred
 #' @export stoch_pred.cov
+#' @export data.trim 
+#' @export data.trim.d
+#' @export sample.size_FH
+#' @export avg.haz
+#' @export getc
+#' @export h.tilde
+#' @export uv
+#' @export v
+#' @export u
+#' @export h1
+#' @export h0
+#' @export I.0
+#' @export I.0.cov 
+#' @export cor.1 
+#' @export I.1 
+#' @export I.1.cov
+#' @export cor.0
+#' @export I_t
+#' @export I_t.2
+#' @export FH.frac.cal
+#' @export WLR.test.cov
+#' @export WLR.test.cor 
+#' @export approx.I
+#' @export FH.table
+#' @export logrank.table
+#' @export survKM_minus
+#' @export survKM_exact
+#' @export FH.test
+#' @export WLR.test
 NULL
+# NULL

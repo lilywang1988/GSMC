@@ -1,11 +1,8 @@
-# Author: Lili Wang
-# Modified: 20210302
-#
 #' Boundary calculation for GSMC
 #' 
 #' Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.
 #'
-#' Suppose there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have totally 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. Controlling the type I error is equivalent to ensuring that \eqn{P(Z_{11}<z_1,Z_{12}<z_1})=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1},Z_{21}<z_2,Z_{22}<z_2)=\alpha} are both satisfied. Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be identical to the order of rows or columns in \code{Sigma0}.  Specifically, in this example, \code{index} should be \code{c(1,1,2,2)}. \code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to every stage.
+#' Suppose there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have totally 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. Controlling the type I error is equivalent to ensuring that \eqn{P(Z_{11}<z_1,Z_{12}<z_1)=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1,Z_{21}<z_2,Z_{22}<z_2)=\alpha} are both satisfied. Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be identical to the order of rows or columns in \code{Sigma0}.  Specifically, in this example, \code{index} should be \code{c(1,1,2,2)}. \code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to every stage.
 #'
 #' @param Sigma0 Correlation matrix for all the test statistics.
 #' @param index Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
@@ -18,6 +15,7 @@
 #' @references 
 #' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 #' @examples
+#'  \dontrun{
 #'   #install.packages("gsDesign")
 #'   library(gsDesign)
 #'   alpha=0.025
@@ -115,8 +113,7 @@
 #' # final stage
 #' mvtnorm::pmvnorm(upper=rep(zz$z_alpha[1:5],each=2),corr=Sigma0[1:10,1:10])[[1]]
 #' 1-alpha_sp[5]
-#library(mvtnorm)  # 1.0-10 version (dependent)
-#old name is Maxcombo_bound
+#'  }
 Maxcombo.bd <- function(
   Sigma0, 
   index, 
@@ -193,6 +190,7 @@ Maxcombo.bd <- function(
 #' @references Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 #' @seealso \code{\link{Maxcombo.beta.n}}
 #' @examples
+#' \dontrun{
 #' # install.packages("mvtnorm")
 #' library(mvtnorm)
 #' # install.packages("gsDesign")
@@ -203,17 +201,29 @@ Maxcombo.bd <- function(
 #' # First we obtain the errors spent at each stage to be identical to the ones
 #'  from regular interim analysis assuming that the interim stage happened at
 #'   60% of events have been observed. The error spending function used below
-#'    is O'Brien-Fleming.
-#' x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(0.7))
+#'    is O\'Brien-Fleming.
+#' x <- gsDesign::gsDesign(
+#' k = 2, 
+#' test.type = 1, 
+#' timing = 0.6, 
+#' sfu = "OF", 
+#' alpha = alpha, 
+#' beta = beta,
+#' delta = -log(0.7)
+#' )
 #' (z <- x$upper$bound)
 #' x
-#' Sigma0_v<-rep(0.5,6)
-#' Sigma0<-matrix(1, ncol=4,nrow=4)
+#' Sigma0_v <- rep(0.5,6)
+#' Sigma0 <- matrix(1, ncol = 4, nrow = 4)
 #' Sigma0[upper.tri(Sigma0)]<- Sigma0_v
 #' Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
 #' Sigma0
 #' alpha_interim <- pnorm(z[1],lower.tail = F) # The error you would like to spend at the interim stage
-#' zz <- Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(alpha_interim,alpha))
+#' zz <- Maxcombo.bd(
+#' Sigma0 = Sigma0,
+#' index = c(1, 1, 2, 2),
+#' alpha_sp = c(alpha_interim,alpha)
+#' )
 #' zz$z_alpha # boundary value for each stage
 #' zz$z_alpha_vec # boundary value for each test statistic correponding to index
 #' # Correlation matrix under the alternative hypothesis
@@ -225,8 +235,17 @@ Maxcombo.bd <- function(
 #' # Define mu1
 #' mu1=c(0.1,0.1,0.2,0.2)
 #' # Obtain the sample size
-#' Maxcombo.sz(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=zz$z_alpha_vec,beta=0.1,interim_vec=c(10,10,18,18),R=14,n_range=c(100,1000),sum_D=0.6)
+#' Maxcombo.sz(
+#' Sigma1 = Sigma1,
+#' mu1 = mu1,
+#' z_alpha_vec = zz$z_alpha_vec,
+#' beta = 0.1,
+#' interim_vec=c(10,10,18,18),
+#' R = 14,
+#' n_range = c(100,1000),
+#' sum_D = 0.6)
 #' # need 232 patients, 140 deaths
+#' }
 #'
 #'
 #'
@@ -336,7 +355,7 @@ Maxcombo.beta.d <- function(
 #' @param lambda The hazard for the control group.
 #' @param theta The hazard ratio after the delayed time \code{eps} for the treatment arm.
 #' @param rho,rho1,rho2 The first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
-#' @param gamma,gamma1,gamma2 The second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}}.
+#' @param gamma,gamma1,gamma2 The second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
 #' @param R The accrual period. 
 #' 
 #' @return 
@@ -350,7 +369,7 @@ Maxcombo.beta.d <- function(
 #' Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135. 
 #' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 #' 
-stoch_pred<-function(eps, p, b, tau, omega, lambda, theta, rho, gamma, R){
+stoch_pred <- function(eps, p, b, tau, omega, lambda, theta, rho, gamma, R){
   n_sub <- floor(b * tau)
   t <- c(0, seq(1, n_sub) / b)
   h_1 <- rep(lambda, (n_sub + 1)) #control
@@ -360,7 +379,7 @@ stoch_pred<-function(eps, p, b, tau, omega, lambda, theta, rho, gamma, R){
     ) #treatment
   N_1 <- rep((1 - p),(n_sub + 1))
   N_2 <- rep(p, (n_sub + 1))
-  for(i in 1:(n_sub - 1)){
+  for(i in 1:max(n_sub - 1,1)){
     N_1[i + 1] <- N_1[i] * (1 - h_1[i] / b-(t[i] > omega) / b / (tau - t[i]))
     N_2[i + 1] <- N_2[i] * (1 - h_2[i] / b-(t[i] > omega) / b / (tau - t[i]))
   }
@@ -452,3 +471,781 @@ stoch_pred.cov<-function(
     )
 }
 
+#' Sample size and boundary for GSMC design 
+#' 
+#' Compute predicted sample size and boundaries for group sequential designs of max-combo tests.
+#' 
+#' 
+#' @param eps the change point, before which, the hazard ratio is 1, and after which, the hazard ratio is theta
+#' @param p treatment assignment probability.
+#' @param b the number of subintervals per time unit.
+#' @param tau the end of the follow-up time  in the study. Note that this is identical to \eqn{T+\tau} in the paper from Hasegawa (2014).
+#' @param omega the minimum follow-up time for all the patients.  Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. Through our simulation tests, we found that this function is quite robust to violations of these assumptions: dropouts, different censoring rates for two  arms, and changing accrual rates. 
+#' @param  FHweights a list of pairs of pairs of parameters (rho, gamma) for the Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}. The first one will provide the information fraction we used to sign the stopping time. Now we only accommodate the surrogate information fraction, i.e., rho = 0 and gamma = 0.
+#' @param interim_ratio a vector of ratios between 0 and 1 that signing the stopping time following the first type of information fraction in FHweights. Note that the last  value must be 1, otherwise, it will automatically append a 1 for the final stage.
+#' @param error_spend cumulative errors spent at each stage (including the final one). Must be of the same length as interim_ratio or one element shorter if the last value of interim_ratio is less than 1. The last element f error_spend should be type I error \code{alpha}.
+#' @param lambda the hazard for the control group.
+#' @param lambda.trt the hazard for the treatment group after time eps.
+#' @param beta type II error, 1-power. 
+#' @param stoch stochastic prediction or not (exact prediction), the former is default. 
+#' @param range_ext the width to extend the range of sample size. If the predicted sampe size is not found in the range, try a wider \code{range_ext}. It will automatically search for the likely range, but still possibly miss the best one, Its default value is 200. 
+#' @param time_ext_multiplier the compute the  time window for the possible stopping time points by multiplying it with the total expected follow-up time tau. The default is 1.5, so that when tau = 18, the longest time we consider would be \eqn{18*1.5=27} months.
+#' @param time_increment time increments to compute the predicted stopping time points, the finer the more accurate. 
+#' 
+GSMC_design <- function(
+  FHweights,
+  interim_ratio,
+  error_spend,
+  eps, 
+  p, 
+  b, 
+  tau, 
+  omega,
+  lambda,
+  lambda.trt,
+  rho, 
+  gamma,
+  beta,
+  stoch = TRUE,
+  range_ext = 200,
+  time_ext_multiplier = 1.5,
+  time_increment = 0.01
+){
+  n_stage <- length(error_spend)
+  n_stage_ratio <- length(interim_ratio)
+  if(interim_ratio[n_stage_ratio] < 1){
+    n_stage_ratio <- n_stage_ratio + 1
+    interim_ratio <- c(interim_ratio, 1)
+  }
+  if(n_stage_ratio != n_stage){
+    stop("If the last interim_ratio is not 1, it will be automatically appended by 1 to become c(interim_ratio, 1). The final length of interim_ratio must be identical to that of error_spend. ")
+  }
+  n_FHweights <- length(FHweights)
+  if(FHweights[[1]][1]!=0 || FHweights[[1]][2]!=0){
+    stop("The first weight must be the simple log-rank test: rho = gamma = 0. ")
+  } 
+  if(!all(unlist(FHweights)%in% c(0,1))){
+    stop("Parameters in FHweights must be either 0 or 1. ")
+  } 
+  alpha <- error_spend[n_stage]
+  size_FH_ls <- lapply(
+    FHweights, 
+    function(weight)
+      sample.size_FH(
+        eps, 
+        p, 
+        b, 
+        tau, 
+        omega, 
+        lambda,
+        lambda.trt,
+        weight[1],
+        weight[2],
+        alpha,
+        beta)
+  )
+  
+  sum_D <- size_FH_ls[[1]]$sum_D # unit death, should be identical to size_FH_lower$sum_D
+  size_pre_vec <- sapply(size_FH_ls, '[[','n')
+  # size_seq is the range of the possible sizes using the old method calculation. 
+  size_range <- pmax(1, range(size_pre_vec) + 
+                       c(-range_ext, +range_ext))
+  
+  size_seq <- size_range[1]:size_range[2]
+  
+  t_ls <- seq(
+    # ensure that it starts from at least with 2 subintervals in stoch_pred
+    2/b, 
+    ceiling(tau * time_ext_multiplier),
+    time_increment
+    )
+  
+  if(stoch){
+    # Under the null, predict the interim and final stage time. 
+    interim_pred0 <- lapply( 
+      interim_ratio,
+      function(prop){
+        t_ls[
+          which.min(
+            abs(
+              sum_D * prop - 
+                sapply(t_ls,
+                       function(t){
+                         stoch_pred(
+                           eps,
+                           p,
+                           b,
+                           t,
+                           omega = max(t - R, 0),
+                           lambda,
+                           1,
+                           0,
+                           0,
+                           R)$sum_D})))]
+      })
+    
+    
+    # Under the alternative, predict the interim and final stage time.
+    interim_pred1 <- lapply( 
+      interim_ratio,
+      function(prop){
+        t_ls[
+          which.min(
+            abs(
+              sum_D * prop - 
+                sapply(t_ls, function(t){
+                  stoch_pred(
+                    eps,
+                    p,
+                    b,
+                    t,
+                    omega = max(t - R,0),
+                    lambda, 
+                    theta, 
+                    0,
+                    0,
+                    R)$sum_D})))]
+      })
+    
+    nvalues <- n_stage * n_FHweights
+    Sigma1 <- Sigma0 <- matrix(NA,
+                               nrow = nvalues,
+                               ncol = nvalues)
+    # Predict the correlation values under the null (indexed by 0) and the alternative (indexed by 1). 
+    
+    for(i in 1:nvalues){
+      for(j in i:nvalues){
+        i_test <- ifelse(i %% n_FHweights == 0, 
+                         n_FHweights,
+                         i %% n_FHweights )
+        i_stage <- ceiling(i / n_FHweights)
+        j_test <- ifelse(j %% n_FHweights == 0, 
+                         n_FHweights, 
+                         j %% n_FHweights )
+        j_stage <- ceiling(j / n_FHweights)  
+        if(i_test == j_test && i_stage != j_stage){
+          Sigma0[i,j] <- sqrt(
+            stoch_pred(
+              eps,
+              p,
+              b,
+              interim_pred0[[i_stage]],
+              omega = max(interim_pred0[[i_stage]]-R, 0),
+              lambda,
+              1,
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              R)$inf / 
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred0[[j_stage]],
+                omega = max(interim_pred0[[j_stage]]-R, 0),
+                lambda,
+                1,
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                R)$inf
+          )
+          
+          Sigma1[i,j] <- sqrt(
+            stoch_pred(
+              eps,
+              p,
+              b,
+              interim_pred1[[i_stage]],
+              omega = max(interim_pred1[[i_stage]]-R, 0),
+              lambda,
+              theta,
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              R)$inf / 
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred1[[j_stage]],
+                omega = max(interim_pred1[[j_stage]]-R, 0),
+                lambda,
+                theta,
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                R)$inf
+          )
+          
+        }else if(i_test != j_test && i_stage == j_stage){
+          Sigma0[i,j] <- stoch_pred.cov(
+            eps,
+            p,
+            b,
+            interim_pred0[[i_stage]],
+            omega = max(interim_pred0[[i_stage]] - R, 0),
+            lambda,
+            1,
+            FHweights[[i_test]][1],
+            FHweights[[i_test]][2],
+            FHweights[[j_test]][1],
+            FHweights[[j_test]][2],
+            R)$cov / sqrt(
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred0[[i_stage]],
+                omega = max(interim_pred0[[i_stage]] - R, 0),
+                lambda, 
+                1,
+                FHweights[[i_test]][1],
+                FHweights[[i_test]][2],
+                R)$inf * stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred0[[i_stage]],
+                  omega = max(interim_pred0[[i_stage]] - R, 0),
+                  lambda,
+                  1,
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  R)$inf
+            ) 
+          
+          Sigma1[i,j] <- stoch_pred.cov(
+            eps,
+            p,
+            b,
+            interim_pred1[[i_stage]],
+            omega = max(interim_pred1[[i_stage]] - R, 0),
+            lambda,
+            theta,
+            FHweights[[i_test]][1],
+            FHweights[[i_test]][2],
+            FHweights[[j_test]][1],
+            FHweights[[j_test]][2],
+            R)$cov / sqrt(
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred1[[i_stage]],
+                omega = max(interim_pred1[[i_stage]] - R, 0),
+                lambda, 
+                theta,
+                FHweights[[i_test]][1],
+                FHweights[[i_test]][2],
+                R)$inf * stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred1[[i_stage]],
+                  omega = max(interim_pred1[[i_stage]] - R, 0),
+                  lambda,
+                  theta,
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  R)$inf
+            ) 
+          
+        }else if (i_test != j_test && i_stage != j_stage){
+          if(is.na(
+            Sigma0[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ])){
+            Sigma0[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ] <- stoch_pred.cov(
+              eps,
+              p,
+              b,
+              interim_pred0[[i_stage]],
+              omega = max(interim_pred0[[i_stage]] - R, 0),
+              lambda,
+              1,
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              FHweights[[j_test]][1],
+              FHweights[[j_test]][2],
+              R)$cov / sqrt(
+                stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred0[[i_stage]],
+                  omega = max(interim_pred0[[i_stage]] - R, 0),
+                  lambda, 
+                  1,
+                  FHweights[[i_test]][1],
+                  FHweights[[i_test]][2],
+                  R)$inf * stoch_pred(
+                    eps,
+                    p,
+                    b,
+                    interim_pred0[[i_stage]],
+                    omega = max(interim_pred0[[i_stage]] - R, 0),
+                    lambda,
+                    1,
+                    FHweights[[j_test]][1],
+                    FHweights[[j_test]][2],
+                    R)$inf
+              ) 
+          } 
+          if(is.na(
+            Sigma1[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ])){
+            Sigma1[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ] <- stoch_pred.cov(
+              eps,
+              p,
+              b,
+              interim_pred1[[i_stage]],
+              omega = max(interim_pred1[[i_stage]] - R, 0),
+              lambda,
+              theta,
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              FHweights[[j_test]][1],
+              FHweights[[j_test]][2],
+              R)$cov / sqrt(
+                stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred1[[i_stage]],
+                  omega = max(interim_pred1[[i_stage]] - R, 0),
+                  lambda, 
+                  theta,
+                  FHweights[[i_test]][1],
+                  FHweights[[i_test]][2],
+                  R)$inf * stoch_pred(
+                    eps,
+                    p,
+                    b,
+                    interim_pred1[[i_stage]],
+                    omega = max(interim_pred1[[i_stage]] - R, 0),
+                    lambda,
+                    theta,
+                    FHweights[[j_test]][1],
+                    FHweights[[j_test]][2],
+                    R)$inf
+              ) 
+          } 
+          if(is.na(
+            Sigma0[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ])){
+            Sigma0[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ] <- sqrt(
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred0[[i_stage]],
+                omega = max(interim_pred0[[i_stage]]-R, 0),
+                lambda,
+                1,
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                R)$inf / 
+                stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred0[[j_stage]],
+                  omega = max(interim_pred0[[j_stage]]-R, 0),
+                  lambda,
+                  1,
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  R)$inf
+            )
+            
+          }
+          
+          if(is.na(
+            Sigma1[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ])){
+            Sigma1[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ] <- sqrt(
+              stoch_pred(
+                eps,
+                p,
+                b,
+                interim_pred1[[i_stage]],
+                omega = max(interim_pred1[[i_stage]]-R, 0),
+                lambda,
+                theta,
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                R)$inf / 
+                stoch_pred(
+                  eps,
+                  p,
+                  b,
+                  interim_pred1[[j_stage]],
+                  omega = max(interim_pred1[[j_stage]]-R, 0),
+                  lambda,
+                  theta,
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  R)$inf
+            )
+            
+          }
+          
+          
+          Sigma0[i,j] <- Sigma0[
+            i_test + (i_stage - 1) * n_FHweights,
+            j_test + (i_stage - 1) * n_FHweights  
+          ] * Sigma0[
+            j_test + (i_stage-1) * n_FHweights,
+            j_test + (j_stage-1) * n_FHweights 
+          ]
+          
+          Sigma1[i,j] <- Sigma1[
+            i_test + (i_stage - 1) * n_FHweights,
+            j_test + (i_stage - 1) * n_FHweights  
+          ] * Sigma1[
+            j_test + (i_stage-1) * n_FHweights,
+            j_test + (j_stage-1) * n_FHweights 
+          ]
+          
+        }else{
+          Sigma0[i,j] = 1
+          Sigma1[i,j] = 1
+        }
+        
+      }
+    }
+    #identical(Sigma0[upper.tri(Sigma0)],  Sigma0[upper.tri(t(Sigma0))])
+    Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
+    Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]  
+    
+  }else{
+    # Exact prediction 
+    # Event time
+    interim_pred0 <- lapply( 
+      interim_ratio,
+      function(prop){
+        t_ls[
+          which.min(
+            abs(
+              sum_D * prop - 
+                sapply(t_ls,
+                       function(t) {
+                         h.tilde(0, lambda, 1, eps, R, p, t)})))]
+      })
+    
+    interim_pred1 <- lapply( 
+      interim_ratio,
+      function(prop){
+        t_ls[
+          which.min(
+            abs(
+              sum_D * prop - 
+                sapply(t_ls, function(t) {
+                  h.tilde(0, lambda, theta, eps, R, p, t)})))]
+      })
+    
+    nvalues <- n_stage * n_FHweights
+    Sigma1 <- Sigma0 <- matrix(NA, nrow = nvalues, ncol = nvalues)
+    # Predict the correlation values under the null (indexed by 0) and the alternative (indexed by 1). 
+    
+    for(i in 1:nvalues){
+      for(j in i:nvalues){
+        i_test <- ifelse(i %% n_FHweights == 0, 
+                         n_FHweights, 
+                         i %% n_FHweights )
+        i_stage <- ceiling(i / n_FHweights)
+        j_test <- ifelse(j %% n_FHweights == 0, 
+                         n_FHweights, 
+                         j %% n_FHweights )
+        j_stage <- ceiling(j / n_FHweights) 
+        if(i_test == j_test && i_stage != j_stage){
+          Sigma0[i,j] <-  sqrt(
+            I.0(
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              lambda = lambda,
+              R = R,
+              p = p,
+              t.star =  interim_pred0[[i_stage]]) / I.0(
+                FHweights[[i_test]][1],
+                FHweights[[i_test]][2],
+                lambda = lambda,
+                R = R,
+                p = p,
+                t.star =  interim_pred0[[j_stage]]
+              ))
+          
+          Sigma1[i,j] <-  sqrt(
+            I.1(
+              FHweights[[i_test]][1],
+              FHweights[[i_test]][2],
+              lambda = lambda,
+              theta = theta,
+              eps = eps,
+              R = R,
+              p = p,
+              t.star = interim_pred1[[i_stage]]) / I.1(
+                FHweights[[i_test]][1],
+                FHweights[[i_test]][2],
+                lambda = lambda, 
+                theta = theta,
+                eps = eps,
+                R = R,
+                p = p,
+                t.star = interim_pred1[[j_stage]]
+              ))
+          
+          
+        }else if(i_test != j_test && i_stage == j_stage){
+          Sigma0[i,j] <- cor.0(
+            rho1 = FHweights[[i_test]][1],
+            gamma1 = FHweights[[i_test]][2],
+            rho2= FHweights[[j_test]][1],
+            gamma2= FHweights[[j_test]][2],
+            lambda = lambda, 
+            R = R,
+            p = p,
+            t.star = interim_pred0[[i_stage]]
+          )
+          
+          Sigma1[i,j] <- cor.1(
+            rho1 = FHweights[[i_test]][1],
+            gamma1 = FHweights[[i_test]][2],
+            rho2 = FHweights[[j_test]][1],
+            gamma2 = FHweights[[j_test]][2],
+            lambda = lambda,
+            theta = theta,
+            eps = eps,
+            R = R,
+            p = p,
+            t.star = interim_pred1[[i_stage]]
+          )
+          
+        }else if (i_test != j_test && i_stage != j_stage){
+          if(is.na(
+            Sigma0[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ])){
+            Sigma0[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ] <- cor.0(
+              rho1 = FHweights[[i_test]][1],
+              gamma1 = FHweights[[i_test]][2],
+              rho2= FHweights[[j_test]][1],
+              gamma2= FHweights[[j_test]][2],
+              lambda = lambda, 
+              R = R,
+              p = p,
+              t.star = interim_pred0[[i_stage]]
+            )
+          } 
+          if(is.na(
+            Sigma1[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ])){
+            Sigma1[
+              i_test + (i_stage - 1) * n_FHweights,
+              j_test + (i_stage - 1) * n_FHweights     
+            ] <- cor.1(
+              rho1 = FHweights[[i_test]][1],
+              gamma1 = FHweights[[i_test]][2],
+              rho2 = FHweights[[j_test]][1],
+              gamma2 = FHweights[[j_test]][2],
+              lambda = lambda,
+              theta = theta,
+              eps = eps,
+              R = R,
+              p = p,
+              t.star = interim_pred1[[i_stage]]
+            )
+          } 
+          if(is.na(
+            Sigma0[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ])){
+            Sigma0[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ] <- sqrt(
+              I.0(
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                lambda = lambda,
+                R = R,
+                p = p,
+                t.star =  interim_pred0[[i_stage]]) / I.0(
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  lambda = lambda,
+                  R = R,
+                  p = p,
+                  t.star =  interim_pred0[[j_stage]]
+                ))
+          }
+          
+          if(is.na(
+            Sigma1[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ])){
+            Sigma1[
+              j_test + (i_stage-1) * n_FHweights,
+              j_test + (j_stage-1) * n_FHweights     
+            ] <- sqrt(
+              I.1(
+                FHweights[[j_test]][1],
+                FHweights[[j_test]][2],
+                lambda = lambda,
+                theta = theta,
+                eps = eps,
+                R = R,
+                p = p,
+                t.star = interim_pred1[[i_stage]]) / I.1(
+                  FHweights[[j_test]][1],
+                  FHweights[[j_test]][2],
+                  lambda = lambda, 
+                  theta = theta,
+                  eps = eps,
+                  R = R,
+                  p = p,
+                  t.star = interim_pred1[[j_stage]]
+                ))
+            
+          }
+          
+          
+          Sigma0[i,j] <- Sigma0[
+            i_test + (i_stage - 1) * n_FHweights,
+            j_test + (i_stage - 1) * n_FHweights  
+          ] * Sigma0[
+            j_test + (i_stage-1) * n_FHweights,
+            j_test + (j_stage-1) * n_FHweights 
+          ]
+          
+          Sigma1[i,j] <- Sigma1[
+            i_test + (i_stage - 1) * n_FHweights,
+            j_test + (i_stage - 1) * n_FHweights  
+          ] * Sigma1[
+            j_test + (i_stage-1) * n_FHweights,
+            j_test + (j_stage-1) * n_FHweights 
+          ]
+          
+        }else{
+          Sigma0[i,j] = 1
+          Sigma1[i,j] = 1
+        }
+        
+      }
+    }
+    
+    #identical(Sigma0[upper.tri(Sigma0)],  Sigma0[upper.tri(t(Sigma0))])
+    Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(Sigma0)]
+    Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(Sigma1)]
+    
+  }
+  
+  ## Obtain he predicted boundaries
+  ### short z_alpha
+  z_alpha_pred <- Maxcombo.bd(
+    Sigma0 = Sigma0,
+    index = rep(1:n_stage, each = n_FHweights),
+    alpha_sp = error_spend)$z_alpha
+  ### long z_alpha_vec
+  z_alpha_vec_pred <- rep(z_alpha_pred, each = n_FHweights)
+  ### For only one stage
+  z_final_alpha_pred <- Maxcombo.bd(
+    Sigma0 = Sigma0[(nvalues-n_FHweights+1):nvalues, (nvalues-n_FHweights+1):nvalues],
+    index = c(1, 1),
+    alpha_sp = c(alpha))$z_alpha
+  
+  ## Obtain the predicted mean: 
+  ### add the "-" before the calculated E* to be consistent with the later calculations using -WLRT/SLRT other than WLRT/SLRT, to make the test statistics tend to be positive under the alternative. Note need to do so if we are not changing the sign of the WLRT/SLRTs. Just make sure that the means and the test statistics are consistent. 
+  mu1 <- NULL
+  k <-  0
+  for(i in 1:n_stage){
+    for(j in 1:n_FHweights){
+      k <- k + 1
+      mu1[k] <- -sample.size_FH(
+        eps,
+        p,
+        b,
+        interim_pred1[[i]],
+        omega = max(interim_pred1[[i]] - R, 0),
+        lambda,
+        lambda.trt,
+        FHweights[[j]][1], 
+        FHweights[[j]][2],
+        alpha,
+        beta
+      )$E.star
+    }
+  }
+  
+  ## Obtain the predicted sample sizes
+  n_FH_ls<-Maxcombo.sz(
+    Sigma1 = Sigma1,
+    mu1 = mu1,
+    z_alpha_vec = z_alpha_vec_pred,
+    beta = beta,
+    interim_vec = rep(unlist(interim_pred1),each = n_FHweights),
+    R = R,
+    n_range = size_range,
+    sum_D = sum_D)
+  
+  n_FH <- n_FH_ls$n
+  n_event_FH <- n_FH_ls$d
+  # @@ the number of events needed to pause the study
+  d_fixed <- ceiling(interim_ratio * n_event_FH) 
+ 
+  # cat("power")
+  # 1-Maxcombo.beta.n(Sigma1,
+  #                   mu1,
+  #                   z_alpha_vec_pred,
+  #                   rep(unlist(interim_pred1), each = n_FHweights),
+  #                   R,
+  #                   n_FH)
+  # cat("power at iterim stage(s)")
+  # sapply(1:n_stage, function(stage){
+  #   1-Maxcombo.beta.n(
+  #     Sigma1[1:(n_FHweights*(stage)),1:(n_FHweights*(stage))],
+  #     mu1[1:(n_FHweights*(stage))],
+  #     z_alpha_vec_pred[1:(n_FHweights*(stage))],
+  #     rep(unlist(interim_pred1),each = n_FHweights)[1:(n_FHweights*(stage))], R,
+  #     n_FH)
+  # })
+  out <- list(
+    z_alpha_pred = z_alpha_pred,
+    z_alpha_vec_pred = z_alpha_vec_pred,
+    z_final_alpha_pred = z_final_alpha_pred,
+    d_fixed = d_fixed,
+    n_FH = n_FH,
+    n_event_FH = n_event_FH,
+    Sigma0 = Sigma0,
+    Sigma1 = Sigma1,
+    mu1 = mu1,
+    FHweights = FHweights,
+    interim_ratio = interim_ratio,
+    error_spend = error_spend
+  )
+  return(out)
+}
