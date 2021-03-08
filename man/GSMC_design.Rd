@@ -65,8 +65,8 @@ GSMC_design(
 \item{interim_pred0}{predicts stopping time points under the null hypothesis following the order of \code{index}.}
 \item{interim_pred1}{predicts stopping time points under the alternative hypothesis following the order of \code{index}.}
 \item{Sigma0}{predicts correlation matrix under the null hypothesis with each row and column following the test statistics corresponding to \code{index}. }
-\item{Sigma1}{predicted correlation matrix under the alternative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
-\item{mu1}{the predicted unit mean under the alternative hypothesis, the \eqn{\tilde{\mu}} in formula (5) of the reference paper. The test statistics follow \code{index}.  It is also the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. Under null, the predicted mean is otherwise 0, implying no treatment effect.  }
+\item{Sigma1}{predicts correlation matrix under the alternative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+\item{mu1}{the predicts unit mean under the alternative hypothesis, the \eqn{\tilde{\mu}} in formula (5) of the reference paper. The test statistics follow \code{index}.  It is also the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. Under null, the predicted mean is otherwise 0, implying no treatment effect.  }
 \item{stoch}{input \code{stoch} boolean variable, \code{TRUE} if stochastic prediction is enabled, \code{FALSE} otherwise. The default is \code{TRUE}. }
 \item{FHweights}{input \code{FHweights} list. }
 \item{interim_ratio}{input \code{interim_ratio} vector.}
