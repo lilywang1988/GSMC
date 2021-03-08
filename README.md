@@ -36,7 +36,7 @@ codes.
 # install.packages("gsDesign")
 library(gsDesign) 
 
-# Information and covariance calculation; sample size computation using the Hasegawa proposal
+# Install the R package
 # install_github("lilywang1988/GSMC")
 library(GSMC) 
 ```
@@ -137,7 +137,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.878999 2.689387 2.548051 2.315743
+#> [1] 2.841907 2.699271 2.555497 2.315949
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -159,7 +159,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.003795892 0.008218398 0.013499469 0.025030388
+#> [1] 0.004255738 0.008219230 0.013496047 0.024922147
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -176,7 +176,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2853944 0.5041769 0.6796882 0.9002883
+#> [1] 0.2983886 0.5026665 0.6774914 0.9001660
 ```
 
 ### Exact prediction approach
@@ -201,7 +201,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.859099 2.693671 2.552895 2.314676
+#> [1] 2.864849 2.697527 2.548143 2.314752
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -223,7 +223,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.004209454 0.008111463 0.013499128 0.024953602
+#> [1] 0.003880589 0.008149000 0.013585787 0.024971327
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -240,7 +240,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2934530 0.5060816 0.6784963 0.9003127
+#> [1] 0.2914380 0.5044875 0.6795115 0.9003363
 ```
 
 ## References

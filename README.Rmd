@@ -34,7 +34,7 @@ To install and use this R package from Github, please uncomment the codes.
 # install.packages("gsDesign")
 library(gsDesign) 
 
-# Information and covariance calculation; sample size computation using the Hasegawa proposal
+# Install the R package
 # install_github("lilywang1988/GSMC")
 library(GSMC) 
 
