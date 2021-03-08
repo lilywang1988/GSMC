@@ -17,28 +17,28 @@ Maxcombo.sz(
 )
 }
 \arguments{
-\item{Sigma1}{The correlation matrix under the alternative hypothesis.}
+\item{Sigma1}{the correlation matrix under the alternative hypothesis.}
 
-\item{mu1}{The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \eqn{E^*} in Hasegawa 2014 paper. ).}
+\item{mu1}{the unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. ).}
 
-\item{z_alpha_vec}{Same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.}
+\item{z_alpha_vec}{same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.}
 
-\item{beta}{Type II error.}
+\item{beta}{type II error.}
 
-\item{interim_vec}{The vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.}
+\item{interim_vec}{the vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.}
 
-\item{R}{End of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.}
+\item{R}{end of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.}
 
-\item{n_range}{The range ot the expected patient numbers.}
+\item{n_range}{the range ot the expected patient numbers.}
 
-\item{sum_D}{Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
+\item{sum_D}{same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
 
 \item{n.rep}{number of repeats to take the median for output}
 }
 \value{
-\item{n}{The number of patients needed for the trial to achieve the predefined power.}
-\item{d}{The number of events needed for the trial to achieve the predefined power.}
-\item{sum_D}{The input \code{sum_D} value. }
+\item{n}{the number of patients needed for the trial to achieve the predefined power.}
+\item{d}{the number of events needed for the trial to achieve the predefined power.}
+\item{sum_D}{the input \code{sum_D} value. }
 }
 \description{
 Sample size calculation to control the type II error or the power of an interim analysis with Maxcombo tests.

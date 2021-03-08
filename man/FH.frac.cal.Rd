@@ -33,7 +33,7 @@ Calculation the information fraction for Fleming-Harrington family weighted log-
 # install.packages("devtools")
 # library(devtools)
 # install_github("keaven/nphsim")
-library(nphsim)
+# library(nphsim)
 eps<-2 # delayed effect
 p<-0.5 #treatment assignment
 b<-30 # an intrinsic parameter to decide the number of intervals per time unit

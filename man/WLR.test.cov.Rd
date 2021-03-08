@@ -46,7 +46,7 @@ Any two weight functions can be assigned to arguments \code{w1} and \code{w2}. T
 # install.packages("devtools")
 # library(devtools)
 # install_github("keaven/nphsim")
-library(nphsim)
+# library(nphsim)
 
 eps<-2 # delayed effect
 p<-0.5 #treatment assignment

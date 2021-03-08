@@ -2,7 +2,7 @@
 % Please edit documentation in R/Maxcombo_size.R
 \name{GSMC_design}
 \alias{GSMC_design}
-\title{Sample size and boundary for GSMC design}
+\title{Predicted sample sizes and boundaries for GSMC design}
 \usage{
 GSMC_design(
   FHweights,
@@ -55,6 +55,88 @@ GSMC_design(
 
 \item{time_increment}{time increments to compute the predicted stopping time points, the finer the more accurate.}
 }
+\value{
+\item{z_alpha_pred}{predicted boundary values for all the stages, length is equivalent to the input \code{interim_ratio} or \code{error_spend}.}
+\item{z_alpha_vec_pred}{predicted boundary values for all the test statistics following \code{index}.}
+\item{d_fixed}{the required observed events at each stage. }
+\item{n_FH}{the total required number of subjects according to the defined hazards.}
+\item{n_event_FH}{the total required number of events according to the defined hazards.}
+\item{index}{records the ordered stages of each stage, starting from 1 end ending at the length of \code{interim_ratio} or \code{error_spend}. It is actually \code{rep(1:length(interim_ratio), each = length(FHweights))}. }
+\item{interim_pred0}{predicted stopping time points under the null hypothesis following the order of \code{index}.}
+\item{interim_pred1}{predicted stopping time points under the alternative hypothesis following the order of \code{index}.}
+\item{Sigma0}{predicted correlation matrix under the null hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+\item{Sigma1}{predicted correlation matrix under the althernative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+\item{mu1}{the predicted unit mean under the alternative hypothesis, the \eqn{\tilde{\mu}} in formula (5) of the reference paper. The test statistics follow \code{index}.  It is also the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. Under null, the predicted mean is otherwise 0, implying no treatment effect.  }
+\item{stoch}{input \code{stoch} boolean variable, \code{TRUE} if stochastic prediction is enabled, \code{FALSE} otherwise. The default is \code{TRUE}. }
+\item{FHweights}{input \code{FHweights} list. }
+\item{interim_ratio}{input \code{interim_ratio} vector.}
+\item{error_spend}{input \code{error_spend} vector. }
+}
 \description{
 Compute predicted sample size and boundaries for group sequential designs of max-combo tests.
+}
+\details{
+Predict the sample sizes and boundaries to achieve the targeted type I errors (error spent at each stage) and power. Prediction approaches include the exact prediction or the stochastic prediction approach following 2-piece-wise exponential distributions given in the appendix of the reference paper.
+}
+\examples{
+\dontrun{
+### Parameters
+FHweights <- list(
+  c(0,0),
+  c(0,1),
+  c(1,0)
+  )
+  n_FHweights <- length(FHweights)
+  # stop when what proportion of the events have been observed.
+  fixed_death_p <-  c(0.6, 0.7, 0.8)
+  interim_ratio <- c(fixed_death_p,1)
+  n_stage <- length(interim_ratio)
+  # treatment assignment.
+  p <- 1/2 
+  # end of the study, chronological assuming it's on the alternative arm.
+  tau <- 18
+  # end of the accrual period, chronological.
+  R <- 14 
+  # minimum potential follow-up time, not considering dropouts or other subject-specific censoring.
+  omega <- (tau-R) 
+  # waiting time before the change point: can be the delayed effect or the crossing effect
+  eps <- 2
+  # event hazard of the control arm.
+  lambda <- log(2)/6 
+  # hazard ratio after the change point eps under the alternative hypothesis. 
+  theta <- 0.6 
+  # event hazard for the treatment arm under the alternative hypothesis and after the change point eps.
+  lambda.trt <- lambda*theta  
+  # type I error under the control.
+  alpha <- 0.025 
+  # type II error under the alternative. 
+  beta <- 0.1 
+  # Obtain the cumulative errors spent at each stage
+  error_spend <- c(0.005, 0.01, 0.015, alpha)
+  # number of subintervals for a time unit
+  b <- 30
+  res <- GSMC_design(
+  FHweights,
+  interim_ratio,
+  error_spend,
+  eps, 
+  p, 
+  b, 
+  tau,]
+  omega,
+  lambda,
+  lambda.trt,
+  rho, 
+  gamma,
+  beta, 
+  stoch = F
+  )
+}
+
+}
+\references{
+Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
+}
+\author{
+Lili Wang
 }

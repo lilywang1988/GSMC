@@ -4,13 +4,13 @@
 #'
 #' Suppose there are 2 stages (1 interim, 1 final), and two tests for a max-combo in each stage, then we have totally 4 test statistics. Let the alpha spending function to be \code{c(alpha1,alpha)}, and the first two (\eqn{Z_{11},Z_{12}}) share one cutoff value z1, the latter two share another two (\eqn{Z_{21},Z_{22}}) share another cutoff value z2. Controlling the type I error is equivalent to ensuring that \eqn{P(Z_{11}<z_1,Z_{12}<z_1)=\alpha_1} and \eqn{P(Z_{11}<z_1,Z_{12}<z_1,Z_{21}<z_2,Z_{22}<z_2)=\alpha} are both satisfied. Note that the vector \eqn{[Z_{11},Z_{12},Z_{21},Z_{22}]^T\sim MVN(0,\Sigma_0)}. \code{Sigma0} corresponds to \eqn{\Sigma_0}, \code{index} records the ordered stages of each test statistics, whose order should be identical to the order of rows or columns in \code{Sigma0}.  Specifically, in this example, \code{index} should be \code{c(1,1,2,2)}. \code{alpha_sp} is the alpha spending function, which records how much type I error you would like to spend up to every stage.
 #'
-#' @param Sigma0 Correlation matrix for all the test statistics.
-#' @param index Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
-#' @param alpha_sp Vector of cumulative errors to spend up to each stage.
+#' @param Sigma0 correlation matrix for all the test statistics.
+#' @param index vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.
+#' @param alpha_sp vector of cumulative errors to spend up to each stage.
 #' @param n.rep number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5. 
 #' @return
-#' \item{z_alpha}{Boundary values for all the stages.}
-#' \item{z_alpha_vec}{Boundary values for all the test statistics following the \code{index}. }
+#' \item{z_alpha}{boundary values for all the stages.}
+#' \item{z_alpha_vec}{boundary values for all the test statistics following the \code{index}. }
 #' @author Lili Wang
 #' @references 
 #' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
@@ -137,7 +137,7 @@ Maxcombo.bd <- function(
       z_alpha[1] <- median(
         replicate(
           n.rep,
-          qmvnorm(1 - alpha_sp[k],
+          mvtnorm::qmvnorm(1 - alpha_sp[k],
                   tail = "lower.tail",
                   corr = Sigma0_use)$quantile
           )
@@ -173,19 +173,19 @@ Maxcombo.bd <- function(
 #' Assume that there are 2 stages (1 interm, 1 final), and two tests for a max-combo in each stage, then we have 4 test statistics, and the two cutoff values for the two stages have been determined by \code{Maxcombo.bd} in advance using their correlation matrix and the error spending function \eqn{\alpha_1, \alpha}. The goal of this function is to control the sample size n (number of patients for both arms) or d (observed events) to achieve the ideal type II error \eqn{\beta} or the power (\eqn{1-\beta}), i.e. \eqn{\P(Z_{11}<z_1,Z_{12}<z_1,Z_{21}<z_2,Z_{22}<z_2)=\beta}.
 #'
 #'
-#' @param Sigma1 The correlation matrix under the alternative hypothesis.
-#' @param mu1 The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \eqn{E^*} in Hasegawa 2014 paper. ).
-#' @param z_alpha_vec Same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.
-#' @param beta Type II error.
-#' @param interim_vec The vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.
-#' @param R End of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.
-#' @param n_range The range ot the expected patient numbers.
-#' @param sum_D Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).
+#' @param Sigma1 the correlation matrix under the alternative hypothesis.
+#' @param mu1 the unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. ).
+#' @param z_alpha_vec same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.
+#' @param beta type II error.
+#' @param interim_vec the vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.
+#' @param R end of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.
+#' @param n_range the range ot the expected patient numbers.
+#' @param sum_D same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).
 #' @param n.rep number of repeats to take the median for output
 #' @return
-#' \item{n}{The number of patients needed for the trial to achieve the predefined power.}
-#' \item{d}{The number of events needed for the trial to achieve the predefined power.}
-#' \item{sum_D}{The input \code{sum_D} value. }
+#' \item{n}{the number of patients needed for the trial to achieve the predefined power.}
+#' \item{d}{the number of events needed for the trial to achieve the predefined power.}
+#' \item{sum_D}{the input \code{sum_D} value. }
 #' @author Lili Wang
 #' @references Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135.
 #' @seealso \code{\link{Maxcombo.beta.n}}
@@ -279,8 +279,8 @@ return(list(n = n, d = d, sum_D = sum_D))
 #' To obtain a spectrum of power for a vector of numbers of subjects (n) using \code{Maxcombo.beta.n} or events (d) using \code{Maxcombo.beta.d}. 
 #'
 #' @inheritParams Maxcombo.sz
-#' @param n_seq The sequence of number of patients.
-#' @param d_seq The sequence of number of expected events.
+#' @param n_seq the sequence of number of patients.
+#' @param d_seq the sequence of number of expected events.
 #' @param n.rep number of repeats to take the median for output
 #' @author Lili Wang
 #' @seealso \code{\link{Maxcombo.sz}}
@@ -348,22 +348,22 @@ Maxcombo.beta.d <- function(
 #'
 #' A stochastic-process way of prediction of the expected event ratio (\eqn{D}), mean difference (\eqn{\mu}), and the information(variance) using \code{stoch_pred} or the covariance using \code{stoch_pred.cov}.
 #'
-#' @param eps Delayed treatment effect time.
-#' @param p Probability of treatment assignment.
-#' @param b The number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.
-#' @param omega The minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. 
-#' @param lambda The hazard for the control group.
-#' @param theta The hazard ratio after the delayed time \code{eps} for the treatment arm.
-#' @param rho,rho1,rho2 The first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
-#' @param gamma,gamma1,gamma2 The second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
-#' @param R The accrual period. 
+#' @param eps delayed treatment effect time.
+#' @param p probability of treatment assignment.
+#' @param b the number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.
+#' @param omega the minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. 
+#' @param lambda the hazard for the control group.
+#' @param theta the hazard ratio after the delayed time \code{eps} for the treatment arm.
+#' @param rho,rho1,rho2 the first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
+#' @param gamma,gamma1,gamma2 the second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.
+#' @param R the accrual period. 
 #' 
 #' @return 
-#' \item{sum_D}{The mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
-#' \item{inf or covariance}{The information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
-#' \item{E.star}{The unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of fomula (8) in Wang et al(2021).}
-#' \item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
-#' \item{t_vec}{The time sequence corresponding to \code{trt_vs_ctrl_N}.}
+#' \item{sum_D}{the mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
+#' \item{inf or covariance}{the information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
+#' \item{E.star}{the unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of formula (8) in Wang et al(2021).}
+#' \item{trt_vs_ctrl_N}{the ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
+#' \item{t_vec}{the time sequence corresponding to \code{trt_vs_ctrl_N}.}
 #' @author Lili Wang
 #' @references 
 #' Hasegawa, T. (2014). Sample size determination for the weighted log‐rank test with the Fleming–Harrington class of weights in cancer vaccine studies. Pharmaceutical statistics, 13(2), 128-135. 
@@ -471,10 +471,11 @@ stoch_pred.cov<-function(
     )
 }
 
-#' Sample size and boundary for GSMC design 
+#' Predicted sample sizes and boundaries for GSMC design 
 #' 
 #' Compute predicted sample size and boundaries for group sequential designs of max-combo tests.
 #' 
+#' Predict the sample sizes and boundaries to achieve the targeted type I errors (error spent at each stage) and power. Prediction approaches include the exact prediction or the stochastic prediction approach following 2-piece-wise exponential distributions given in the appendix of the reference paper. 
 #' 
 #' @param eps the change point, before which, the hazard ratio is 1, and after which, the hazard ratio is theta
 #' @param p treatment assignment probability.
@@ -491,6 +492,80 @@ stoch_pred.cov<-function(
 #' @param range_ext the width to extend the range of sample size. If the predicted sampe size is not found in the range, try a wider \code{range_ext}. It will automatically search for the likely range, but still possibly miss the best one, Its default value is 200. 
 #' @param time_ext_multiplier the compute the  time window for the possible stopping time points by multiplying it with the total expected follow-up time tau. The default is 1.5, so that when tau = 18, the longest time we consider would be \eqn{18*1.5=27} months.
 #' @param time_increment time increments to compute the predicted stopping time points, the finer the more accurate. 
+#' @return 
+#' \item{z_alpha_pred}{predicted boundary values for all the stages, length is equivalent to the input \code{interim_ratio} or \code{error_spend}.}
+#' \item{z_alpha_vec_pred}{predicted boundary values for all the test statistics following \code{index}.}
+#' \item{d_fixed}{the required observed events at each stage. }
+#' \item{n_FH}{the total required number of subjects according to the defined hazards.}
+#' \item{n_event_FH}{the total required number of events according to the defined hazards.}
+#' \item{index}{records the ordered stages of each stage, starting from 1 end ending at the length of \code{interim_ratio} or \code{error_spend}. It is actually \code{rep(1:length(interim_ratio), each = length(FHweights))}. }
+#' \item{interim_pred0}{predicted stopping time points under the null hypothesis following the order of \code{index}.}
+#' \item{interim_pred1}{predicted stopping time points under the alternative hypothesis following the order of \code{index}.}
+#' \item{Sigma0}{predicted correlation matrix under the null hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+#' \item{Sigma1}{predicted correlation matrix under the althernative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+#' \item{mu1}{the predicted unit mean under the alternative hypothesis, the \eqn{\tilde{\mu}} in formula (5) of the reference paper. The test statistics follow \code{index}.  It is also the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. Under null, the predicted mean is otherwise 0, implying no treatment effect.  }
+#' \item{stoch}{input \code{stoch} boolean variable, \code{TRUE} if stochastic prediction is enabled, \code{FALSE} otherwise. The default is \code{TRUE}. }
+#' \item{FHweights}{input \code{FHweights} list. }
+#' \item{interim_ratio}{input \code{interim_ratio} vector.}
+#' \item{error_spend}{input \code{error_spend} vector. }
+#' 
+#' @author Lili Wang
+#' @references 
+#' Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
+#' @examples 
+#' \dontrun{
+#' ### Parameters
+#' FHweights <- list(
+#'   c(0,0),
+#'   c(0,1),
+#'   c(1,0)
+#'   )
+#'   n_FHweights <- length(FHweights)
+#'   # stop when what proportion of the events have been observed.
+#'   fixed_death_p <-  c(0.6, 0.7, 0.8)
+#'   interim_ratio <- c(fixed_death_p,1)
+#'   n_stage <- length(interim_ratio)
+#'   # treatment assignment.
+#'   p <- 1/2 
+#'   # end of the study, chronological assuming it's on the alternative arm.
+#'   tau <- 18
+#'   # end of the accrual period, chronological.
+#'   R <- 14 
+#'   # minimum potential follow-up time, not considering dropouts or other subject-specific censoring.
+#'   omega <- (tau-R) 
+#'   # waiting time before the change point: can be the delayed effect or the crossing effect
+#'   eps <- 2
+#'   # event hazard of the control arm.
+#'   lambda <- log(2)/6 
+#'   # hazard ratio after the change point eps under the alternative hypothesis. 
+#'   theta <- 0.6 
+#'   # event hazard for the treatment arm under the alternative hypothesis and after the change point eps.
+#'   lambda.trt <- lambda*theta  
+#'   # type I error under the control.
+#'   alpha <- 0.025 
+#'   # type II error under the alternative. 
+#'   beta <- 0.1 
+#'   # Obtain the cumulative errors spent at each stage
+#'   error_spend <- c(0.005, 0.01, 0.015, alpha)
+#'   # number of subintervals for a time unit
+#'   b <- 30
+#'   res <- GSMC_design(
+#'   FHweights,
+#'   interim_ratio,
+#'   error_spend,
+#'   eps, 
+#'   p, 
+#'   b, 
+#'   tau,]
+#'   omega,
+#'   lambda,
+#'   lambda.trt,
+#'   rho, 
+#'   gamma,
+#'   beta, 
+#'   stoch = F
+#'   )
+#' }
 #' 
 GSMC_design <- function(
   FHweights,
@@ -1166,13 +1241,14 @@ GSMC_design <- function(
   
   ## Obtain he predicted boundaries
   ### short z_alpha
+  index <- rep(1:n_stage, each = n_FHweights)
   z_alpha_pred <- Maxcombo.bd(
     Sigma0 = Sigma0,
-    index = rep(1:n_stage, each = n_FHweights),
+    index = index,
     alpha_sp = error_spend)$z_alpha
   ### long z_alpha_vec
   z_alpha_vec_pred <- rep(z_alpha_pred, each = n_FHweights)
-  ### For only one stage
+  ### For only one final stage
   z_final_alpha_pred <- Maxcombo.bd(
     Sigma0 = Sigma0[(nvalues-n_FHweights+1):nvalues, (nvalues-n_FHweights+1):nvalues],
     index = c(1, 1),
@@ -1207,14 +1283,14 @@ GSMC_design <- function(
     mu1 = mu1,
     z_alpha_vec = z_alpha_vec_pred,
     beta = beta,
-    interim_vec = rep(unlist(interim_pred1),each = n_FHweights),
+    interim_vec = rep(unlist(interim_pred1), each = n_FHweights),
     R = R,
     n_range = size_range,
     sum_D = sum_D)
   
   n_FH <- n_FH_ls$n
   n_event_FH <- n_FH_ls$d
-  # @@ the number of events needed to pause the study
+  # the number of events needed to pause the study at each stage
   d_fixed <- ceiling(interim_ratio * n_event_FH) 
  
   # cat("power")
@@ -1224,7 +1300,7 @@ GSMC_design <- function(
   #                   rep(unlist(interim_pred1), each = n_FHweights),
   #                   R,
   #                   n_FH)
-  # cat("power at iterim stage(s)")
+  # cat("power at interim stage(s)")
   # sapply(1:n_stage, function(stage){
   #   1-Maxcombo.beta.n(
   #     Sigma1[1:(n_FHweights*(stage)),1:(n_FHweights*(stage))],
@@ -1235,11 +1311,14 @@ GSMC_design <- function(
   # })
   out <- list(
     z_alpha_pred = z_alpha_pred,
-    z_alpha_vec_pred = z_alpha_vec_pred,
+    z_alpha_vec_pred = z_alpha_vec_pred, 
     z_final_alpha_pred = z_final_alpha_pred,
     d_fixed = d_fixed,
     n_FH = n_FH,
     n_event_FH = n_event_FH,
+    index = index,
+    interim_pred0 = interim_pred0,
+    interim_pred1 = interim_pred1,
     Sigma0 = Sigma0,
     Sigma1 = Sigma1,
     mu1 = mu1,

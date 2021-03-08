@@ -438,7 +438,7 @@ I_t.2 <- function(data_ref, data_check, rho, gamma){
 #' # install.packages("devtools")
 #' # library(devtools)
 #' # install_github("keaven/nphsim")
-#' library(nphsim)
+#' # library(nphsim)
 #' eps<-2 # delayed effect
 #' p<-0.5 #treatment assignment
 #' b<-30 # an intrinsic parameter to decide the number of intervals per time unit
@@ -517,7 +517,7 @@ FH.frac.cal <- function(data, t_vec, I_max, rho, gamma, trimmed){
 #' # install.packages("devtools")
 #' # library(devtools)
 #' # install_github("keaven/nphsim")
-#' library(nphsim)
+#' # library(nphsim)
 #'
 #' eps<-2 # delayed effect
 #' p<-0.5 #treatment assignment

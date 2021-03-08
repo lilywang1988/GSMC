@@ -19,23 +19,23 @@ Maxcombo.beta.d(
 )
 }
 \arguments{
-\item{Sigma1}{The correlation matrix under the alternative hypothesis.}
+\item{Sigma1}{the correlation matrix under the alternative hypothesis.}
 
-\item{mu1}{The unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the fomula for \eqn{E^*} in Hasegawa 2014 paper. ).}
+\item{mu1}{the unit mu under the alternative hypothesis (the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. ).}
 
-\item{z_alpha_vec}{Same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.}
+\item{z_alpha_vec}{same as the one exported from Maxcombo.bd, which is the boundaries for ordered test statistics, its order should be consistent to the rows and columns in \code{Sigma1}.}
 
-\item{interim_vec}{The vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.}
+\item{interim_vec}{the vector of the interims in each stages, not that it should be a repeat vector with same iterim values for all the test statitics at same stages.}
 
-\item{R}{End of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.}
+\item{R}{end of the enrollment time, which is identical to \code{R} defined in other functions like \code{\link{I.1}}.}
 
-\item{n_seq}{The sequence of number of patients.}
+\item{n_seq}{the sequence of number of patients.}
 
 \item{n.rep}{number of repeats to take the median for output}
 
-\item{d_seq}{The sequence of number of expected events.}
+\item{d_seq}{the sequence of number of expected events.}
 
-\item{sum_D}{Same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
+\item{sum_D}{same as the exported value from \code{\link{sample.size_FH}}, the summed \eqn{D^*} in Hasegawa (2014).}
 }
 \description{
 To obtain a spectrum of power for a vector of numbers of subjects (n) using \code{Maxcombo.beta.n} or events (d) using \code{Maxcombo.beta.d}.
