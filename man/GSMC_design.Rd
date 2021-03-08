@@ -25,11 +25,11 @@ GSMC_design(
 )
 }
 \arguments{
-\item{FHweights}{a list of pairs of pairs of parameters (rho, gamma) for the Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}. The first one will provide the information fraction we used to sign the stopping time. Now we only accommodate the surrogate information fraction, i.e., rho = 0 and gamma = 0.}
+\item{FHweights}{a list of pairs of parameters (rho, gamma) for the Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}. The first one will provide the information fraction we used to sign the stopping time. Now we only accommodate the surrogate information fraction, i.e., rho = 0 and gamma = 0.}
 
 \item{interim_ratio}{a vector of ratios between 0 and 1 that signing the stopping time following the first type of information fraction in FHweights. Note that the last  value must be 1, otherwise, it will automatically append a 1 for the final stage.}
 
-\item{error_spend}{cumulative errors spent at each stage (including the final one). Must be of the same length as interim_ratio or one element shorter if the last value of interim_ratio is less than 1. The last element f error_spend should be type I error \code{alpha}.}
+\item{error_spend}{cumulative errors spent at each stage (including the final one). Must be of the same length as interim_ratio or one element shorter if the last value of interim_ratio is less than 1. The last element of error_spend should be type I error \code{alpha}.}
 
 \item{eps}{the change point, before which, the hazard ratio is 1, and after which, the hazard ratio is theta}
 
