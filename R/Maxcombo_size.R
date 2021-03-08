@@ -492,6 +492,7 @@ stoch_pred.cov<-function(
 #' @param range_ext the width to extend the range of sample sizes. If the predicted sample size is not found in the range, try a wider \code{range_ext}. It will automatically search for the likely range, but still possibly miss the best one. Its default value is 200. 
 #' @param time_ext_multiplier compute the time window for the possible stopping time points by multiplying it with the total expected follow-up time \code{tau}. The default is 1.5. In other words, when tau = 18, the longest time we consider would be \eqn{18 * 1.5 = 27} months.
 #' @param time_increment time increments to compute the predicted stopping time points, the finer the more accurate. 
+#' @param n.rep same as the one in \code{\link{Maxcombo.sz}}. The number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5. 
 #' @return 
 #' \item{z_alpha_pred}{predicted boundary values for all the stages, length is equivalent to the input \code{interim_ratio} or \code{error_spend}.}
 #' \item{z_alpha_vec_pred}{predicted boundary values for all the test statistics following \code{index}.}
@@ -584,7 +585,8 @@ GSMC_design <- function(
   stoch = TRUE,
   range_ext = 200,
   time_ext_multiplier = 1.5,
-  time_increment = 0.01
+  time_increment = 0.01,
+  n.rep = 5
 ){
   n_stage <- length(error_spend)
   n_stage_ratio <- length(interim_ratio)
@@ -1286,7 +1288,8 @@ GSMC_design <- function(
     interim_vec = rep(unlist(interim_pred1), each = n_FHweights),
     R = R,
     n_range = size_range,
-    sum_D = sum_D)
+    sum_D = sum_D,
+    n.rep = n.rep)
   
   n_FH <- n_FH_ls$n
   n_event_FH <- n_FH_ls$d

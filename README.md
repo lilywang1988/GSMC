@@ -2,7 +2,7 @@ R package GSMC: a simulation-free group sequential design with max-combo
 tests in the presence of non-proportional hazards
 ================
 [Lili Wang](mailto:lilywang@umich.edu)
-2021-03-07
+2021-03-08
 
 ## Purpose
 
@@ -137,7 +137,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.877891 2.691192 2.549678 2.314415
+#> [1] 2.855540 2.701437 2.551739 2.315130
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -159,7 +159,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.003810478 0.008252976 0.013475474 0.025090654
+#> [1] 0.004288906 0.007884917 0.013420704 0.025079343
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -176,7 +176,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2857845 0.5035939 0.6790512 0.9004592
+#> [1] 0.2935830 0.5010690 0.6782893 0.9002948
 ```
 
 ### Exact prediction approach
@@ -201,7 +201,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.852677 2.699476 2.549476 2.315769
+#> [1] 2.850109 2.701568 2.548501 2.314266
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -223,7 +223,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.004022728 0.008347995 0.013518426 0.024997621
+#> [1] 0.003916809 0.008039365 0.013472264 0.025109667
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -240,7 +240,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2957122 0.5045205 0.6793257 0.9001907
+#> [1] 0.2966166 0.5037712 0.6795027 0.9004317
 ```
 
 ## References

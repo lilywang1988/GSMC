@@ -21,7 +21,8 @@ GSMC_design(
   stoch = TRUE,
   range_ext = 200,
   time_ext_multiplier = 1.5,
-  time_increment = 0.01
+  time_increment = 0.01,
+  n.rep = 5
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ GSMC_design(
 \item{time_ext_multiplier}{compute the time window for the possible stopping time points by multiplying it with the total expected follow-up time \code{tau}. The default is 1.5. In other words, when tau = 18, the longest time we consider would be \eqn{18 * 1.5 = 27} months.}
 
 \item{time_increment}{time increments to compute the predicted stopping time points, the finer the more accurate.}
+
+\item{n.rep}{same as the one in \code{\link{Maxcombo.sz}}. The number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5.}
 }
 \value{
 \item{z_alpha_pred}{predicted boundary values for all the stages, length is equivalent to the input \code{interim_ratio} or \code{error_spend}.}
