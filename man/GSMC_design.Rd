@@ -25,9 +25,9 @@ GSMC_design(
 )
 }
 \arguments{
-\item{FHweights}{a list of pairs of parameters (rho, gamma) for the Fleming Harrington weighted log-rank tests:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}. The first one will provide the information fraction we used to sign the stopping time. Now we only accommodate the surrogate information fraction, i.e., rho = 0 and gamma = 0.}
+\item{FHweights}{a list of pairs of parameters (rho, gamma) for the Fleming Harrington weighted log-rank tests:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}. The first one will provide the information fraction we will use to sign the stopping time. Now we only accommodate the surrogate information fraction, i.e., rho = 0 and gamma = 0.}
 
-\item{interim_ratio}{a vector of ratios between 0 and 1 that signing the stopping time following the first type of information fraction in FHweights. Note that the last  value must be 1, otherwise, it will automatically append a 1 for the final stage.}
+\item{interim_ratio}{a vector of ratios between 0 and 1 that sign the stopping time following the first type of information fraction in FHweights, i.e. the event sizes. Note that the last value must be 1, otherwise, the function will automatically append 1 for the final stage.}
 
 \item{error_spend}{cumulative errors spent at each stage (including the final one). Must be of the same length as interim_ratio or one element shorter if the last value of interim_ratio is less than 1. The last element of error_spend should be type I error \code{alpha}.}
 
@@ -39,7 +39,7 @@ GSMC_design(
 
 \item{tau}{the end of the follow-up time  in the study. Note that this is identical to \eqn{T+\tau} in the paper from Hasegawa (2014).}
 
-\item{omega}{the minimum follow-up time for all the patients.  Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. Through our simulation tests, we found that this function is quite robust to violations of these assumptions: dropouts, different censoring rates for two  arms, and changing accrual rates.}
+\item{omega}{the minimum follow-up time for all the patients.  Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}. Through our simulation tests, however, we found that this function is quite robust to violations of these assumptions: dropouts, different censoring rates for two  arms, and changing accrual rates.}
 
 \item{lambda}{the hazard for the control group.}
 
@@ -49,9 +49,9 @@ GSMC_design(
 
 \item{stoch}{stochastic prediction or not (exact prediction), the former is default.}
 
-\item{range_ext}{the width to extend the range of sample size. If the predicted sampe size is not found in the range, try a wider \code{range_ext}. It will automatically search for the likely range, but still possibly miss the best one, Its default value is 200.}
+\item{range_ext}{the width to extend the range of sample sizes. If the predicted sample size is not found in the range, try a wider \code{range_ext}. It will automatically search for the likely range, but still possibly miss the best one. Its default value is 200.}
 
-\item{time_ext_multiplier}{the compute the  time window for the possible stopping time points by multiplying it with the total expected follow-up time tau. The default is 1.5, so that when tau = 18, the longest time we consider would be \eqn{18*1.5=27} months.}
+\item{time_ext_multiplier}{compute the time window for the possible stopping time points by multiplying it with the total expected follow-up time \code{tau}. The default is 1.5. In other words, when tau = 18, the longest time we consider would be \eqn{18 * 1.5 = 27} months.}
 
 \item{time_increment}{time increments to compute the predicted stopping time points, the finer the more accurate.}
 }
@@ -61,11 +61,11 @@ GSMC_design(
 \item{d_fixed}{the required observed events at each stage. }
 \item{n_FH}{the total required number of subjects according to the defined hazards.}
 \item{n_event_FH}{the total required number of events according to the defined hazards.}
-\item{index}{records the ordered stages of each stage, starting from 1 end ending at the length of \code{interim_ratio} or \code{error_spend}. It is actually \code{rep(1:length(interim_ratio), each = length(FHweights))}. }
-\item{interim_pred0}{predicted stopping time points under the null hypothesis following the order of \code{index}.}
-\item{interim_pred1}{predicted stopping time points under the alternative hypothesis following the order of \code{index}.}
-\item{Sigma0}{predicted correlation matrix under the null hypothesis with each row and column following the test statistics corresponding to \code{index}. }
-\item{Sigma1}{predicted correlation matrix under the althernative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+\item{index}{records the ordered stages for each tests, starting from 1 and ending at the length of \code{interim_ratio} or \code{error_spend}. It is actually \code{rep(1:length(interim_ratio), each = length(FHweights))}. }
+\item{interim_pred0}{predicts stopping time points under the null hypothesis following the order of \code{index}.}
+\item{interim_pred1}{predicts stopping time points under the alternative hypothesis following the order of \code{index}.}
+\item{Sigma0}{predicts correlation matrix under the null hypothesis with each row and column following the test statistics corresponding to \code{index}. }
+\item{Sigma1}{predicted correlation matrix under the alternative hypothesis with each row and column following the test statistics corresponding to \code{index}. }
 \item{mu1}{the predicted unit mean under the alternative hypothesis, the \eqn{\tilde{\mu}} in formula (5) of the reference paper. The test statistics follow \code{index}.  It is also the mean of the expectation of each subject scaled weighted log-rank test statistic, which can be approximated using the formula for \eqn{E^*} in Hasegawa 2014 paper. Under null, the predicted mean is otherwise 0, implying no treatment effect.  }
 \item{stoch}{input \code{stoch} boolean variable, \code{TRUE} if stochastic prediction is enabled, \code{FALSE} otherwise. The default is \code{TRUE}. }
 \item{FHweights}{input \code{FHweights} list. }
@@ -73,7 +73,7 @@ GSMC_design(
 \item{error_spend}{input \code{error_spend} vector. }
 }
 \description{
-Compute predicted sample size and boundaries for group sequential designs of max-combo tests.
+Compute predicted sample size and boundaries for a group sequential design of max-combo tests.
 }
 \details{
 Predict the sample sizes and boundaries to achieve the targeted type I errors (error spent at each stage) and power. Prediction approaches include the exact prediction or the stochastic prediction approach following 2-piece-wise exponential distributions given in the appendix of the reference paper.
