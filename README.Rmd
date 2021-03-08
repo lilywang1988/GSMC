@@ -232,10 +232,10 @@ sapply(1:length(interim_ratio), function(stage){
 
 4. Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019). Design and monitoring of survival trials in complex scenarios. Statistics in medicine, 38(2), 192-209.
 
-5. Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
+5. Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Pharmaceutical Statistics.
 
 Other relevant R packages:
 
-[1]: https://github.com/lilywang1988/IAfrac 
-[2]: https://github.com/keaven/nphsim
-[3]: https://cran.r-project.org/web/packages/mvtnorm/index.html
+1. https://github.com/lilywang1988/IAfrac 
+2. https://github.com/keaven/nphsim
+3. https://cran.r-project.org/web/packages/mvtnorm/index.html
