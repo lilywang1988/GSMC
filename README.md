@@ -45,12 +45,16 @@ library(GSMC)
 
 The detailed difference between the two prediction approaches can be
 found in the [methodology
-paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!").
+paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!"):
 
-To sum up, the differences include: 1. The exact method is faster. 2.
-The exact approach is limited to piece-wise exponential distribution. 3.
-When the number of subintervals at each time unit (or value b) is large
-in stochastic approach, both methods produce very comparable results.
+1.  The exact method is faster.
+
+2.  The exact approach is limited to piece-wise exponential
+    distribution.
+
+3.  When the number of subintervals at each time unit (or value b) is
+    large in stochastic approach, both methods produce very comparable
+    results.
 
 ### Stochastic prediction approach
 
@@ -133,7 +137,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.876527 2.688397 2.547964 2.316473
+#> [1] 2.878999 2.689387 2.548051 2.315743
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -155,7 +159,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.003862255 0.008361641 0.013398043 0.025018483
+#> [1] 0.003795892 0.008218398 0.013499469 0.025030388
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -172,7 +176,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2862521 0.5046768 0.6797519 0.9001834
+#> [1] 0.2853944 0.5041769 0.6796882 0.9002883
 ```
 
 ### Exact prediction approach
@@ -197,7 +201,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.871917 2.687659 2.551739 2.314696
+#> [1] 2.859099 2.693671 2.552895 2.314676
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -219,7 +223,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.003822338 0.008040890 0.013405736 0.024983148
+#> [1] 0.004209454 0.008111463 0.013499128 0.024953602
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -236,7 +240,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2889700 0.5075307 0.6789829 0.9003590
+#> [1] 0.2934530 0.5060816 0.6784963 0.9003127
 ```
 
 ## References
