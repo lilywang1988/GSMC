@@ -16,9 +16,9 @@ before ending the study.
 
 For details about the calculation of the information and covariance
 using estimation (data-driven) and prediction methods please find
-another R package [IAfrac](https://github.com/lilywang1988/IAfrac). The
-recent version (\>= 0.2.1) has all the functions in package `IAfrac`
-imported already so there is no need to attach it separately.
+another R package \[IAfrac\]\[1\]. The recent version (\>= 0.2.1) has
+all the functions in package `IAfrac` imported already so there is no
+need to attach it separately.
 
 We hope this package will be improved gradually. Please let us know your
 feedback.
@@ -133,7 +133,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.858002 2.698675 2.548058 2.316725
+#> [1] 2.876527 2.688397 2.547964 2.316473
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -155,7 +155,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.004038821 0.008164345 0.013367219 0.024983513
+#> [1] 0.003862255 0.008361641 0.013398043 0.025018483
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -172,7 +172,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2927187 0.5020424 0.6794439 0.9001261
+#> [1] 0.2862521 0.5046768 0.6797519 0.9001834
 ```
 
 ### Exact prediction approach
@@ -197,7 +197,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.867160 2.694316 2.548900 2.316180
+#> [1] 2.871917 2.687659 2.551739 2.314696
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -219,7 +219,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.004010273 0.008090862 0.013413109 0.024922578
+#> [1] 0.003822338 0.008040890 0.013405736 0.024983148
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -236,7 +236,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2906341 0.5054211 0.6794938 0.9001279
+#> [1] 0.2889700 0.5075307 0.6789829 0.9003590
 ```
 
 ## References
@@ -259,6 +259,10 @@ sapply(1:length(interim_ratio), function(stage){
 
 5.  Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group
     Sequential Design with Max-combo Tests in the Presence of
-    Non-proportional Hazards. Journal of Pharmaceutical Statistics.
+    Non-proportional Hazards. Pharmaceutical Statistics.
 
 Other relevant R packages:
+
+1.  <https://github.com/lilywang1988/IAfrac>
+2.  <https://github.com/keaven/nphsim>
+3.  <https://cran.r-project.org/web/packages/mvtnorm/index.html>
