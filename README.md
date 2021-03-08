@@ -1,780 +1,242 @@
 R package GSMC: a simulation-free group sequential design with max-combo
 tests in the presence of non-proportional hazards
 ================
-[Lili Wang](https://lilywang.info)
-2020-12-06
+[Lili Wang](mailto:lilywang@umich.edu)
+2021-03-07
 
 ## Purpose
 
 This R package is to implement the proposed [simulation-free method for
 group sequential design with maxcombo
-tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")(GS-MC).
+tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the paper!")(GS-MC).
 The goal here is to improve the detection power of the weighted log-rank
 tests (WLRTs) when the non-proportional hazards are present. Moreover,
 the method is simulation-free, and allows multiple checks (interims)
 before ending the study.
 
-This R package is currently dependent on other R packages including
-[mvtnorm](https://cran.r-project.org/web/packages/mvtnorm/index.html)
-and my another package on github
-[IAfrac](https://github.com/lilywang1988/IAfrac). I hope that this
-package will be improved gradually please let us know if you spot
-anything unclear or suspicious to you.
-
 For details about the calculation of the information and covariance
-using estimation (data-driven) and prediction methods please find the
-README file of [IAfrac](https://github.com/lilywang1988/IAfrac).
+using estimation (data-driven) and prediction methods please find
+another R package [IAfrac](https://github.com/lilywang1988/IAfrac). The
+recent version (\>= 0.2.1) has all the functions in package `IAfrac`
+imported already so there is no need to attach it separately.
+
+We hope this package will be improved gradually. Please let us know your
+feedback.
 
 ## Preparation
 
-To install and use this R package from Github, you will need to install
-another R package “devtools” and two packages on Github:
-[nphsim](https://github.com/keaven/nphsim),
-[IAfrac](https://github.com/lilywang1988/IAfrac). Please uncomment the
-codes to install them.
+To install and use this R package from Github, please uncomment the
+codes.
 
 ``` r
 # install.packages("devtools")
 # library(devtools)
+# 
+# Optional: to obtain the expected errors spent at each stage
+# install.packages("gsDesign")
+library(gsDesign) 
 
-#for information and covariance calculation; sample size computation using Hasegawa proposal
-# install_github("lilywang1988/IAfrac")
-library(IAfrac) 
-
-#Generate data following nonproportional hazards
-# install_github("keaven/nphsim")
-library(nphsim) 
-#> Warning: replacing previous import 'ggplot2::autoplot' by 'survMisc::autoplot'
-#> when loading 'nphsim'
-
-#for information and covariance calculation; sample size computation using Hasegawa proposal
+# Information and covariance calculation; sample size computation using the Hasegawa proposal
 # install_github("lilywang1988/GSMC")
 library(GSMC) 
 ```
 
-## Vignette 1: sample size caulcation and plots for GS-MC (\(d\) or \(n\) vs \(\epsilon\))
+## Sample size and threshold prediction for three tests and 4 stages (3 interim and 1 final)
 
-### Caveats:
+The detailed difference between the two prediction approaches can be
+found in the [methodology
+paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!").
 
-  - Make sure you install and activate all the packages:
-    [IAfrac](https://github.com/lilywang1988/IAfrac) and
-    [nphsim](https://github.com/keaven/nphsim)
-  - Here I only conduct prediction based on the exact survival
-    distributions, in Vignett2, I will introduce the stochastic
-    prediction and estimation method
-  - Two (M=2) tests are in the combo: \(G_{0,0}(t)\) and \(G_{0,1}(t)\)
-  - Two (K=2) stages are included: one interim stage and one final stage
-  - The codes I used to prepare Figure 2 in the [methodology
-    paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")
+To sum up, the differences include: 1. The exact method is faster. 2.
+The exact approach is limited to piece-wise exponential distribution. 3.
+When the number of subintervals at each time unit (or value b) is large
+in stochastic approach, both methods produce very comparable results.
 
-<!-- end list -->
+### Stochastic prediction approach
+
+We consider three different Fleming Harrington type weighted log-rank
+tests, and **the first one must be the simple log-rank test**. We will
+use the event number ratios (surrogate information fractions in the
+Hasegawa 2016 paper) to monitor the stopping time points.
 
 ``` r
-#rm(list=ls())
-#install.packages("ggplot2")
-library(ggplot2)
-fixed_death_p<-0.6
-p<-1/2
-tau_star<-21 # a safe technical end
-tau<-18
-R <- 14 # accrual period
-omega <- (tau-R) # total follow-up time after the end of the acrrual period
-eps.ls <- seq(0,3.5,0.05) # the vector of eps (delayed time) you would like to test
-lambda <- log(2)/6 # median survival is 6 months
-(theta <- 0.6) # the hazard ratio after the change point eps is 0.6
-#> [1] 0.6
-lambda.trt <- lambda*theta # treatment effect after the change point eps
-alpha <- 0.025 # type I error
-beta <- 0.1 # type II error
+### Parameters
+# The first pair of FHweight parameters must be a simple log-rank test
+FHweights <- list(
+  c(0,0), # must be c(0,0)
+  c(0,1),
+  c(1,0)
+)
+n_FHweights <- length(FHweights)
 
-b <- 30 # number of subintervals at each time point --> for the use of sample.size_FH in IAfrac
+# stop when what proportions of the events have been observed.
+interim_ratio <- c(0.6, 0.7, 0.8, 1)
+n_stage <- length(interim_ratio)
 
-# Define the Fleming-Harrington class of WLRTs
-rho <- 0 
-gamma <- 1
+# treatment assignment
+p <- 1/2 
+# end of the study, chronological, assuming it's on the alternative arm
+tau <- 18
+# end of the accrual period, chronological
+R <- 14 
+# minimum potential follow-up time
+omega <- (tau-R) 
+# waiting time before the delayed effect starts
+eps <- 2
+# event hazard of the control arm.
+lambda <- log(2)/6 
+# hazard ratio after the change point eps under the alternative hypothesis. 
+theta <- 0.6 
+# event hazard for the treatment arm under the alternative hypothesis and after the change point eps.
+lambda.trt <- lambda * theta  
+# cumulative type I error under the control.
+alpha <- 0.025 
+# cumulative type II error under the alternative. 
+beta <- 0.1 
 
-# Obtain the boundaries under for regular single variable tests (e.g. WLRT, SLRT)
-x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
-(z <- x$upper$bound)
-#> [1] 2.571839 1.992138
+# Obtain the cumulative errors spent at each stage following O\'Brien-Fleming
+x <- gsDesign(
+  k = n_stage, 
+  test.type = 1, 
+  timing = interim_ratio[-n_stage], 
+  sfu = "OF", 
+  alpha = alpha, 
+  beta = beta, 
+  delta = -log(theta)
+)
+# obtain the cumulative errors spent at each stage
+error_spend <- cumsum(x$upper$prob[,1])
+# correct the last entry
+error_spend[length(error_spend)] <- alpha 
 
-# Preparing variables to store the results
-n_MCGS<-d_MCGS<-n_FH_00_ls<-n_FH_01_ls<-d_FH_00_ls<-d_FH_01_ls<-NULL
 
-ll<-0 # index for eps.ls
-len=length(eps.ls)
+# number of subintervals for a time unit, the larger the finer 
+# and more accurate; 30 should be good enough for most cases
+b <- 30
 
-pt<- proc.time() # timer
-for(eps in eps.ls){
-  ll=ll+1
-  # Below is for the sample size calculation under H0
-  size_FH_00 <- sample.size_FH(eps,p,b,tau,omega,lambda,lambda.trt,0, 0,alpha,beta)
-  size_FH_01<-sample.size_FH(eps,p,b,tau,omega,lambda,lambda.trt,0, 1,alpha,beta)
-  sum_D<-size_FH_00$sum_D # should be identical to size_FH_01$sum_D
-  
-  size_range<-c(max(min(size_FH_00$n,size_FH_01$n)-50,10),max(max(size_FH_00$n,size_FH_01$n+50),20))  # introduce 50 to allow the sample size to be slightly lower or higher than the boundaries defined by the two test statistics; alternatively, one may use [10, 500] if computation time is not a concern here. 
-  t_ls<-seq(0.1,25,0.1) # time points to check to find the solution of predicted stopping times; one may also consider using uniroot which should provide predictions on a finer scale.
-  interim_pred0<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {h.tilde(0,lambda,1,eps,R,p,t)})))] ### predicted stoping time at the interim stage under H0
-  
-  final_pred0<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t){h.tilde(0,lambda,1,eps,R,p,t)})))] ### predicted stoping time at the final stage under H0
-  
-  interim_pred1<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {h.tilde(0,lambda,theta,eps,R,p,t)})))] ### predicted stoping time at interim stage under H1
-  
-  final_pred1<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t){h.tilde(0,lambda,theta,eps,R,p,t)})))]  ### predicted stoping time at final stage under H1
-  
-  # Predict correlations under H0
-  wi_si_cor_pred0<-cor.0(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,R=R,p=p,t.star=interim_pred0)
-  wf_sf_cor_pred0<-cor.0(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,R=R,p=p,t.star=final_pred0)
-  si_sf_cor_pred0<-sqrt(I.0(0,0,lambda=lambda,R=R,p=p,t.star=interim_pred0)/I.0(0,0,lambda=lambda,R=R,p=p,t.star=final_pred0))
-  wi_wf_cor_pred0<-sqrt(I.0(0,1,lambda=lambda,R=R,p=p,t.star=interim_pred0)/I.0(0,1,lambda=lambda,R=R,p=p,t.star=final_pred0))
-  # Follow Theorem 1 in the reference paper 5
-  wi_sf_cor_pred0<-wi_si_cor_pred0*si_sf_cor_pred0
-  wf_si_cor_pred0<-wi_si_cor_pred0*wi_wf_cor_pred0
-  
-    # Predict correlations under H1
-  wi_si_cor_pred1<-cor.1(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)
-  wf_sf_cor_pred1<-cor.1(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1)
-  
-  si_sf_cor_pred1<-sqrt(I.1(0,0,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)/I.1(0,0,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1))
-  wi_wf_cor_pred1<-sqrt(I.1(0,1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)/I.1(0,1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1))
-  
-  # Follow Theorem 1 in the reference paper 5s  
-  wi_sf_cor_pred1<-wi_si_cor_pred1*si_sf_cor_pred1
-  wf_si_cor_pred1<-wi_si_cor_pred1*wi_wf_cor_pred1
-  
-  
-  #### For the vector to prepare the correlation matrix in an order of si, wi, sf, wf
-  Sigma0_v<-c(wi_si_cor_pred0,si_sf_cor_pred0,wi_sf_cor_pred0,wf_si_cor_pred0,wi_wf_cor_pred0,wf_sf_cor_pred0)
-  Sigma1_v<-c(wi_si_cor_pred1,si_sf_cor_pred1,wi_sf_cor_pred1,wf_si_cor_pred1,wi_wf_cor_pred1,wf_sf_cor_pred1)
-  
-  #Sigma0_v<-1:6
-  # obtain the 4x4 symmetric correlation matrix under H0
-  Sigma0<-matrix(1, ncol=4,nrow=4)
-  Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-  Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
-  
-  # Sigma0_v<-1:6
-  # obtain the 4x4 symmetric correlation matrix under H1
-  Sigma1<-matrix(1, ncol=4,nrow=4)
-  Sigma1[upper.tri(Sigma1)]<- Sigma1_v
-  Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]
-  
-  ## Obtain he predicted boundaries (exact prediction method)
-  ### long z_alpha_vec as the boundary values for GS-MC with K=2 (2 tests) M=2 (2 stages including 1 interm stage): replicative for multiple tests in each stage
-  z_alpha_vec_pred<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(pnorm(z[1],lower.tail = F),alpha))$z_alpha_vec
-  ### short z_alpha as the houndary values: unique entry for each stage
-  z_alpha_pred<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(pnorm(z[1],lower.tail = F),alpha))$z_alpha
-  
-  ### If we only have the final stage, no interim stage, or in other words, if it is not a group sequential design
-  z_final_alpha_pred<-Maxcombo.bd(Sigma0 = Sigma0[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))$z_alpha
-  
-  ## Obtain the predicted mean: 
-  ### add the "-" before the calculated E* to be consistent with the later calculations using -WLRT/SLRT other than WLRT/SLRT, to make the test statistics tend to be positive under the alternative. Note that we　do not need to do so if we are not changing the sign of the WLRT/SLRTs. Just make sure that the means and the test statistics are consistent. 
-  mu1<-NULL
-  mu1[1]<--sample.size_FH(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,lambda.trt,0, 0,alpha,beta)$E.star
-  mu1[2]<--sample.size_FH(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,lambda.trt,rho, gamma,alpha,beta)$E.star
-  mu1[3]<--sample.size_FH(eps,p,b,final_pred1,omega=final_pred1-R,lambda,lambda.trt,0, 0,alpha,beta)$E.star
-  mu1[4]<--sample.size_FH(eps,p,b,final_pred1,omega=final_pred1-R,lambda,lambda.trt,rho, gamma,alpha,beta)$E.star
-  
-  ## Obtain the predicted sample sizes
-  n_FH_ls<-Maxcombo.sz(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=z_alpha_vec_pred,beta=beta,interim_vec=c(rep(interim_pred1,2),rep(final_pred1,2)),R=R,n_range=size_range,sum_D=sum_D)
-  
-  n_MCGS[ll]<-n_FH_ls$n
-  d_MCGS[ll]<-n_FH_ls$d
-  
-  n_FH_00_ls[ll]<-size_FH_00$n
-  n_FH_01_ls[ll]<-size_FH_01$n
-  
-  d_FH_00_ls[ll]<-size_FH_00$n_event
-  d_FH_01_ls[ll]<-size_FH_01$n_event
-  
-}
-(timecost<- (proc.time()-pt)/len) # average time usage
-#>         user       system      elapsed 
-#> 0.4209154930 0.0008732394 0.4225352113
+# Obtain the settings from stochastic prediction
+setting_stoch <- GSMC_design(
+  FHweights,
+  interim_ratio,
+  error_spend,
+  eps, 
+  p, 
+  b, 
+  tau, 
+  omega,
+  lambda,
+  lambda.trt,
+  rho, 
+  gamma,
+  beta,
+  stoch = T
+)
+# Boundaries at each stage
+setting_stoch$z_alpha_pred
+#> [1] 2.858002 2.698675 2.548058 2.316725
+# Event numbers to pause/stop
+setting_stoch$d_fixed
+#> [1] 189 221 252 315
 
-# The interval when GS-MC requires the least sample size
-eps.ls[which(n_MCGS<pmin(n_FH_00_ls,n_FH_01_ls))]
-#> [1] 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10
+# Boundary if only consider the last stage (without interim stages)
+setting_stoch$z_final_alpha_pred
+#> [1] 2.136161
 
-data_n<-c(n_MCGS,n_FH_00_ls,n_FH_01_ls)
-data_d<-c(d_MCGS,d_FH_00_ls,d_FH_01_ls)
-
-index<-factor(c(rep("Maxcombo",len),rep("G(0,0)",len),rep("G(0,1)",len)),levels=c("Maxcombo","G(0,0)","G(0,1)"))
-data_plot<-data.frame(data_n,data_d,index=index,eps.ls=rep(eps.ls,3))
-# Plotting here
-(plot1<-ggplot(data=data_plot,aes(x=eps.ls,y=data_n,linetype=index))+
-    geom_line(size=0.75)+labs(title=expression(paste("n vs. ",epsilon)),x=expression(paste(epsilon)),y="n")+theme_light()+
-    theme(plot.title = element_text(hjust = 0.5))+
-    theme(legend.position = "right",legend.title = element_blank()))
+# Predicted type I error at each stages
+sapply(1:n_stage, function(stage){
+   1-Maxcombo.beta.n(
+     setting_stoch$Sigma0[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     0, # mean is 0 under null
+     setting_stoch$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_stoch$interim_pred0), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_stoch$n_FH)
+   })
+#> [1] 0.004038821 0.008164345 0.013367219 0.024983513
+# vs. the designed errors spent at each stage
+error_spend
+#> [1] 0.004035615 0.008187950 0.013471082 0.025000000
+# Predicted power at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_stoch$Sigma1[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     setting_stoch$mu1[1:(n_FHweights * (stage))],
+     setting_stoch$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_stoch$interim_pred1), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_stoch$n_FH)
+   })
+#> [1] 0.2927187 0.5020424 0.6794439 0.9001261
 ```
 
-![](man/figures/README-vignette1-1.png)<!-- -->
+### Exact prediction approach
 
 ``` r
-
-#ggsave("size_plot1_new.png",plot1,height=4,width=4)
-#ggsave("size_plot1_new.pdf",plot1,height=4,width=4)
-
-(plot2<-ggplot(data=data_plot,aes(x=eps.ls,y=data_d,linetype=index))+
-    geom_line(size=0.75)+labs(title=expression(paste("d vs. ", epsilon)),x=expression(paste(epsilon)),y="d")+theme_light()+
-    theme(plot.title = element_text(hjust = 0.5))+
-    theme(legend.position = "right",legend.title = element_blank()))
-```
-
-![](man/figures/README-vignette1-2.png)<!-- -->
-
-``` r
-
-#ggsave("size_plot2_new.png",plot2,height=4,width=4)
-#ggsave("size_plot2_new.pdf",plot2,height=4,width=4)
-```
-
-## Vignette 2: simulation sample for GS-MC (repeat the results in the paper\!)
-
-  - The codes for all the tables in the
-    [paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!").
-
-  - 48 different cases, with codes in form of S/E in each entry cell,
-    where S stands for the code of the stochastic prediction method, and
-    E stands for the code of the exact prediction method;
-
-  - Under the null hypothesis \(H_0\):
-
-| Violations            | \(\theta=0.7\) | \(\theta=0.6\) | \(\theta=0.5\) |
-| :-------------------- | :------------: | :------------: | :------------: |
-| no violation          |      1/25      |      9/33      |     17/41      |
-| violations I\&II      |      3/27      |     11/35      |     19/43      |
-| violations I\&II\&III |      5/29      |     13/37      |     21/45      |
-| violations I\&II\&IV  |      7/31      |     15/39      |     23/47      |
-
-  - Under the alternative hypothesis \(H_1\):
-
-| Violations            | \(\theta=0.7\) | \(\theta=0.6\) | \(\theta=0.5\) |
-| :-------------------- | :------------: | :------------: | :------------: |
-| no violation          |      2/26      |     10/34      |     18/42      |
-| violations I\&II      |      4/28      |     12/36      |     20/44      |
-| violations I\&II\&III |      6/30      |     14/38      |     22/46      |
-| violations I\&II\&IV  |      8/32      |     16/40      |     24/48      |
-
-``` r
-set.seed(123456) # set an auspicious seed, like your birthday~
-date <- "20191218" #optional for the file name
-
-server_num=2 #any value from 1 to 48 to indicate the 48 different combinations of scenario and methods, for details please check the two tables above. 
-
-hypo<-c("alt","null")[server_num%%2+1] #"null" or "alt".
-nloops <- c(10000,50000)[server_num%%2+1]  # suugest using 2e5 under the null; 5e4 under the alternative in the paper, here use a smaller number for demonstration (10,000 for H1, 50,000 for H0, to make life easier)
-# Rule of thumb: 
-#number of simualtions: recommend using >50,000 for type I error, >10,000 for type II error
-case<-paste0(c("N","A","NC","AC","NS","AS","NT","AT"),rep(1:6,each=8))[server_num] #length=48
-
-# indicator of using stochastical or non-stochastical prediction method
-stoch<-c(T,F)[ifelse(server_num<=24,1,2)]
-violation<-c(0,1,2,3)[ceiling(ifelse(server_num%%8==0,8,server_num%%8)/2)] #0 denotes "no violation", 1 denotes "violations on the accrual, censoring"; 2 denotes "in addition to the violations denoted by 1, the event rate is wrong"; 3 denotes "in addition to the violations denoted by 1, the delayed time is wrong"  
-
-
-fixed_death_p<-0.6 # stop when what proportion of the events have been observed.
-p<-1/2 # treatment assignment.
-tau<-18 # end of the study, chronological.
-R <- 14 # end of the accrual period, chronological.
-omega <- (tau-R) # minimum potenital follow-up time, not considering dropouts or other subect specific censoring.
-eps <- 2 # awaiting time before the change point.
-lambda <- log(2)/6 # event hazard of the control arm.
-theta <- c(0.7,0.6,0.5)[ifelse((ceiling(server_num/8))%%3==0,3,(ceiling(server_num/8))%%3)] # hazard ratio after the change point eps under the alternative hypothesis. 
-lambda.trt <- lambda*theta # event hazard for the treatment arm under the alternative hypothesis and after the change point eps. 
-alpha <- 0.025 # type I error under the control.
-beta <- 0.1 # type II error under the control. 
-
-# parameters for WLRT G
-rho <- 0
-gamma <- 1
-# Assume that there is not subject specific censoring
-cen_p_ctrl<-1e-6
-cen_p_trt<-1e-6
-cen_ctrl<--log(1-cen_p_ctrl)/12
-cen_trt<--log(1-cen_p_trt)/12
-
-# Special parameters for the Violations 2-3
-eps_star=6
-lambda_star=log(2)/12
-
-# The title for the record of the output csv file
-title <- paste0(date,"_",case)
-## boundary calculation using the old method gsDesign for standard G(0,0) log-rank test. 
-x <- gsDesign::gsDesign(k=2, test.type=1, timing=0.6, sfu="OF", alpha=alpha, beta=beta,delta=-log(theta))
-(z <- x$upper$bound)
-#> [1] 2.571839 1.992138
-
-
-# Below is for the boundary and sample size calculation
-b <- 30 # number of subintervals for a time unit
-# calculat the sample sizes using two different WLRTs, the n needed for the maxcombo should lie between the two values. 
-size_FH_upper <- sample.size_FH(eps,p,b,tau,omega,lambda,lambda.trt,0, 0,alpha,beta)
-size_FH_lower<-sample.size_FH(eps,p,b,tau,omega,lambda,lambda.trt,0, 1,alpha,beta)
-sum_D<-size_FH_upper$sum_D # unit death, should be identical to size_FH_lower$sum_D
-# size_seq is the range of the possible sizes using the old method calculation. 
-size_range<-c(min(size_FH_lower$n,size_FH_upper$n),max(size_FH_lower$n,size_FH_upper$n))
-size_seq<-seq(min(size_FH_lower$n,size_FH_upper$n),max(size_FH_lower$n,size_FH_upper$n),1)
-t_ls<-seq(0.1,25,0.1) # a sequence of time to predict the interim and final stage time under the null and alternative hypotheses. 
-c=exp(-lambda*(1-theta)*eps) # the c constant for piecewise exponential hazard and survival curves calculation
-
-if(stoch){
-  # Under the null, predict the interim and final stage time. 
-  interim_pred0<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {stoch_pred(eps,p,b,t,omega=max(t-R,0),lambda,1,rho,gamma,R)$sum_D})))]
-  
-  final_pred0<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t) {stoch_pred(eps,p,b,t,omega=max(t-R,0),lambda,1,rho,gamma,R)$sum_D})))]
-  
-  # Under the alternative, predict the inteirm and final stage time.
-  interim_pred1<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {stoch_pred(eps,p,b,t,omega=max(t-R,0),lambda,theta,rho,gamma,R)$sum_D})))]
-  
-  final_pred1<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t) {stoch_pred(eps,p,b,t,omega=max(t-R,0),lambda,theta,rho,gamma,R)$sum_D})))]
-  
-  
-  # Predict the correlation values under the null (indeced by 0) and the alternative (indeced by 1). 
-  ## wi: WLRT at interim; wf: WLRT at final; si: SLRT at interim; sf: SLRT at final. 
-  ### Under the null
-  wi_si_cor_pred0<-stoch_pred.cov(eps,p,b,interim_pred0,omega=max(interim_pred0-R,0),lambda,1,rho,gamma,0,0,R)$cov/sqrt(stoch_pred(eps,p,b,interim_pred0,omega=max(interim_pred0-R,0),lambda,1,rho,gamma,R)$inf*stoch_pred(eps,p,b,interim_pred0,omega=max(interim_pred0-R,0),lambda,1,0,0,R)$inf) 
-  
-  wf_sf_cor_pred0<-stoch_pred.cov(eps,p,b,final_pred0,omega=max(final_pred0-R,0),lambda,1,rho,gamma,0,0,R)$cov/sqrt(stoch_pred(eps,p,b,final_pred0,omega=max(final_pred0-R,0),lambda,1,rho,gamma,R)$inf*stoch_pred(eps,p,b,final_pred0,omega=max(final_pred0-R,0),lambda,1,0,0,R)$inf) 
-  
-  si_sf_cor_pred0<-sqrt(stoch_pred(eps,p,b,interim_pred0,omega=max(interim_pred0-R,0),lambda,1,0,0,R)$inf/stoch_pred(eps,p,b,final_pred0,omega=max(final_pred0-R,0),lambda,1,0,0,R)$inf)
-  
-  wi_wf_cor_pred0<-sqrt(stoch_pred(eps,p,b,interim_pred0,omega=max(interim_pred0-R,0),lambda,1,rho,gamma,R)$inf/stoch_pred(eps,p,b,final_pred0,omega=max(final_pred0-R,0),lambda,1,rho,gamma,R)$inf)
-  
-  wi_sf_cor_pred0<-wi_si_cor_pred0*si_sf_cor_pred0
-  wf_si_cor_pred0<-wi_si_cor_pred0*wi_wf_cor_pred0
-  
-  ### under the alternative 
-  wi_si_cor_pred1<-stoch_pred.cov(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,theta,rho,gamma,0,0,R)$cov/sqrt(stoch_pred(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,theta,rho,gamma,R)$inf*stoch_pred(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,theta,0,0,R)$inf) 
-  
-  wf_sf_cor_pred1<-stoch_pred.cov(eps,p,b,final_pred1,omega=max(final_pred1-R,0),lambda,theta,rho,gamma,0,0,R)$cov/sqrt(stoch_pred(eps,p,b,final_pred1,omega=max(final_pred1-R,0),lambda,theta,rho,gamma,R)$inf*stoch_pred(eps,p,b,final_pred1,omega=max(final_pred1-R,0),lambda,theta,0,0,R)$inf) 
-  
-  si_sf_cor_pred1<-sqrt(stoch_pred(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,theta,0,0,R)$inf/stoch_pred(eps,p,b,final_pred1,omega=max(final_pred1-R,0),lambda,theta,0,0,R)$inf)
-  
-  
-  wi_wf_cor_pred1<-sqrt(stoch_pred(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,theta,rho,gamma,R)$inf/stoch_pred(eps,p,b,final_pred1,omega=max(final_pred1-R,0),lambda,theta,rho,gamma,R)$inf)
-  
-  wi_sf_cor_pred1<-wi_si_cor_pred1*si_sf_cor_pred1
-  wf_si_cor_pred1<-wi_si_cor_pred1*wi_wf_cor_pred1
-} else{
-  interim_pred0<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {h.tilde(0,lambda,1,eps,R,p,t)})))] ### constant ratio between two treatment
-  
-  final_pred0<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t){h.tilde(0,lambda,1,eps,R,p,t)})))]### constant ratio between two treatment
-  
-  interim_pred1<-t_ls[which.min(abs(sum_D*fixed_death_p-sapply(t_ls,function(t) {h.tilde(0,lambda,theta,eps,R,p,t)})))] ### constant ratio between two treatment
-  
-  final_pred1<-t_ls[which.min(abs(sum_D-sapply(t_ls,function(t){h.tilde(0,lambda,theta,eps,R,p,t)})))]  ### constant ratio between two treatment
-  
-  wi_si_cor_pred0<-cor.0(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,R=R,p=p,t.star=interim_pred0)
-  wf_sf_cor_pred0<-cor.0(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,R=R,p=p,t.star=final_pred0)
-  si_sf_cor_pred0<-sqrt(I.0(0,0,lambda=lambda,R=R,p=p,t.star=interim_pred0)/I.0(0,0,lambda=lambda,R=R,p=p,t.star=final_pred0))
-  wi_wf_cor_pred0<-sqrt(I.0(0,1,lambda=lambda,R=R,p=p,t.star=interim_pred0)/I.0(0,1,lambda=lambda,R=R,p=p,t.star=final_pred0))
-  wi_sf_cor_pred0<-wi_si_cor_pred0*si_sf_cor_pred0
-  wf_si_cor_pred0<-wi_si_cor_pred0*wi_wf_cor_pred0
-  
-  wi_si_cor_pred1<-cor.1(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)
-  wf_sf_cor_pred1<-cor.1(rho1=0,gamma1=0,rho2=0,gamma2=1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1)
-  
-  si_sf_cor_pred1<-sqrt(I.1(0,0,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)/I.1(0,0,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1))
-  wi_wf_cor_pred1<-sqrt(I.1(0,1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=interim_pred1)/I.1(0,1,lambda=lambda,theta=theta,eps=eps,R=R,p=p,t.star=final_pred1))
-  
-  wi_sf_cor_pred1<-wi_si_cor_pred1*si_sf_cor_pred1
-  wf_si_cor_pred1<-wi_si_cor_pred1*wi_wf_cor_pred1
-}
-
-####in an order of si, wi, sf, wf
-Sigma0_v<-c(wi_si_cor_pred0,si_sf_cor_pred0,wi_sf_cor_pred0,wf_si_cor_pred0,wi_wf_cor_pred0,wf_sf_cor_pred0)
-Sigma1_v<-c(wi_si_cor_pred1,si_sf_cor_pred1,wi_sf_cor_pred1,wf_si_cor_pred1,wi_wf_cor_pred1,wf_sf_cor_pred1)
-
-#Sigma0_v<-1:6
-#obtain the 4x4 correlation matrix
-Sigma0<-matrix(1, ncol=4,nrow=4)
-Sigma0[upper.tri(Sigma0)]<- Sigma0_v
-Sigma0[lower.tri(Sigma0)]<- t(Sigma0)[lower.tri(t(Sigma0))]
-
-# Sigma0_v<-1:6
-Sigma1<-matrix(1, ncol=4,nrow=4)
-Sigma1[upper.tri(Sigma1)]<- Sigma1_v
-Sigma1[lower.tri(Sigma1)]<- t(Sigma1)[lower.tri(t(Sigma1))]
-
-## Obtain he predicted boundaries
-### long z_alpha_vec
-z_alpha_vec_pred<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(pnorm(z[1],lower.tail = F),alpha))$z_alpha_vec
-### short z_alpha
-z_alpha_pred<-Maxcombo.bd(Sigma0 = Sigma0,index=c(1,1,2,2),alpha_sp=c(pnorm(z[1],lower.tail = F),alpha))$z_alpha
-### For the final stage
-z_final_alpha_pred<-Maxcombo.bd(Sigma0 = Sigma0[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))$z_alpha
-
-## Obtain the predicted mean: 
-### add the "-" before the calculated E* to be consistent with the later calculations using -WLRT/SLRT other than WLRT/SLRT, to make the test statistics tend to be positive under the alternative. Note need to do so if we are not changing the sign of the WLRT/SLRTs. Just make sure that the means and the test statistics are consistent. 
-mu1<-NULL
-mu1[1]<--sample.size_FH(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,lambda.trt,0, 0,alpha,beta)$E.star
-mu1[2]<--sample.size_FH(eps,p,b,interim_pred1,omega=max(interim_pred1-R,0),lambda,lambda.trt,rho, gamma,alpha,beta)$E.star
-mu1[3]<--sample.size_FH(eps,p,b,final_pred1,omega=final_pred1-R,lambda,lambda.trt,0, 0,alpha,beta)$E.star
-mu1[4]<--sample.size_FH(eps,p,b,final_pred1,omega=final_pred1-R,lambda,lambda.trt,rho, gamma,alpha,beta)$E.star
-
-## Obtain the predicted sample sizes
-n_FH_ls<-Maxcombo.sz(Sigma1=Sigma1,mu1=mu1,z_alpha_vec=z_alpha_vec_pred,beta=beta,interim_vec=c(rep(interim_pred1,2),rep(final_pred1,2)),R=R,n_range=size_range,sum_D=sum_D)
-
-n_FH<-n_FH_ls$n
-n_event_FH<-n_FH_ls$d
-d_fixed<-ceiling(fixed_death_p*n_event_FH) # the number of events needed to pause the study for an interim analysis
-
-# the accrual rate needed
-accrual.rt <- n_FH/sum(R)
-
-
-
-# Assumption violations: the true accrual rates, censoring rates and event hazard
-if(violation==1){
-  accrual.rt0<-c(accrual.rt/5,accrual.rt/5*2,accrual.rt/5*3,
-                accrual.rt/5*4,accrual.rt/5*6) #total=14*accrual.rt
-  R0 <- c(1,1,1,1,10)
-  cen_p_ctrl0<-0.1 #yearly censoring probability
-  cen_p_trt0<-0.2
-  cen_ctrl0<--log(1-cen_p_ctrl0)/12
-  cen_trt0<--log(1-cen_p_trt0)/12
-  lambda0 <- lambda #log(2)/12
-  lambda0.trt <- lambda.trt #log(2)/12*theta
-  eps0<-eps
-  intervals0<-c(eps0)
-  
-}else if (violation==2){
-  accrual.rt0<-c(accrual.rt/5,accrual.rt/5*2,accrual.rt/5*3,
-                 accrual.rt/5*4,accrual.rt/5*6) #total=14*accrual.rt
-  R0 <- c(1,1,1,1,10)
-  cen_p_ctrl0<-0.1 #yearly censoring probability
-  cen_p_trt0<-0.2
-  cen_ctrl0<--log(1-cen_p_ctrl0)/12
-  cen_trt0<--log(1-cen_p_trt0)/12
-  lambda0 <- lambda_star #log(2)/12
-  lambda0.trt <- lambda_star*theta #log(2)/12*theta
-  eps0<-eps
-  intervals0<-c(eps0)
-}else if (violation==3){
-  accrual.rt0<-c(accrual.rt/5,accrual.rt/5*2,accrual.rt/5*3,
-                 accrual.rt/5*4,accrual.rt/5*6) #total=14*accrual.rt
-  R0 <- c(1,1,1,1,10)
-  cen_p_ctrl0<-0.1 #yearly censoring probability
-  cen_p_trt0<-0.2
-  cen_ctrl0<--log(1-cen_p_ctrl0)/12
-  cen_trt0<--log(1-cen_p_trt0)/12
-  lambda0 <- lambda #log(2)/12
-  lambda0.trt <- lambda.trt #log(2)/12*theta
-  eps0<-eps_star
-  intervals0<-c(eps0)
-}else{
-  accrual.rt0<-accrual.rt
-  # true accrual period
-  R0<-R
-  cen_ctrl0<-cen_ctrl
-  cen_trt0<-cen_trt
-  lambda0 <- lambda
-  lambda0.trt<- lambda.trt
-  eps0<-eps
-  intervals0<-c(eps0)
-}
-
-
-#############################################
-# Assign the predicted correlations according to the known status: either null or alternative hypothesis. 
-
-if(hypo=="null"){
-  interim_pred<-interim_pred0
-  
-  final_pred<-final_pred0
-  
-  wi_si_cor_pred<-wi_si_cor_pred0
-  wf_sf_cor_pred<-wf_sf_cor_pred0
-  si_sf_cor_pred<-si_sf_cor_pred0
-  wi_wf_cor_pred<-wi_wf_cor_pred0
-  wi_sf_cor_pred<-wi_sf_cor_pred0
-  wf_si_cor_pred<-wf_si_cor_pred0
-}else{
-  interim_pred<-interim_pred1
-  
-  final_pred<-final_pred1
-  
-  wi_si_cor_pred<-wi_si_cor_pred1
-  wf_sf_cor_pred<-wf_sf_cor_pred1
-  si_sf_cor_pred<-si_sf_cor_pred1
-  wi_wf_cor_pred<-wi_wf_cor_pred1
-  wi_sf_cor_pred<-wi_sf_cor_pred1
-  wf_si_cor_pred<-wf_si_cor_pred1
-}
-
-# Start of the simulations and the data-driven boundary estimation. 
-z_alpha_est<-matrix(NA,nrow=nloops,ncol=2)
-z_final_est=z1_est=z2_est=NULL
-maxcombo.final.dec.onestep<-maxcombo.interim<-maxcombo.final<-maxcombo.interim.dec<-maxcombo.final.dec<-NULL
-# Definition for the estimated correlations below. 
-wlrt.interim <- wlrt.final <- NULL
-slrt.interim <- slrt.final <- NULL
-final_time <- interim_time <- NULL
-wi_sf_cor_est<-wi_si_cor_est<-si_sf_cor_est<-NULL
-wf_si_cor_est<-wf_sf_cor_est<-wi_wf_cor_est<-NULL
-# wi_wf_cor_est2<-NULL
-Sigma_v<-matrix(NA,nrow=nloops,ncol=6)
-#pb <- txtProgressBar(min = 0, max = nloops, style = 3)
-for(l in  1:nloops){
-  set.seed(l)
-  {if(hypo=="null") data_temp<- nphsim(nsim=1,lambdaC=lambda0, lambdaE = lambda0, ssC=ceiling(n_FH*(1-p)), intervals = intervals0,ssE=ceiling(n_FH*p), gamma=accrual.rt0, R=R0, eta=cen_ctrl0,etaE=cen_trt0, fixEnrollTime = TRUE)$simd # fixed enrollment time, adjust the accrual time
-    else if (hypo=="alt") data_temp<- nphsim(nsim=1,lambdaC=lambda0, lambdaE = c(lambda0,lambda0.trt), ssC=ceiling(n_FH*(1-p)), intervals = intervals0,ssE=ceiling(n_FH*p), gamma=accrual.rt0, R=R0, eta=cen_ctrl0,etaE=cen_trt0, fixEnrollTime = TRUE)$simd # fixed enrollment time, adjust the accrual time
-  }
-  data_interim<-data.trim.d(d_fixed,data_temp)
-  data_final<-data.trim.d(n_event_FH,data_temp)
-  
-  interim_time[l]<-data_interim[[2]]
-  final_time[l]<-data_final[[2]]
-  
-  data_interim=data_interim[[1]]
-  data_final=data_final[[1]]
-  
-  wlrt.interim[l]<- tryCatch(FH.test(survival=data_interim$survival,delta=data_interim$delta,trt=data_interim$trt,rho=rho,gamma=gamma)$Z,error=function(e) NA)
-  slrt.interim[l]<- tryCatch(FH.test(survival=data_interim$survival,delta=data_interim$delta,trt=data_interim$trt,rho=0,gamma=0)$Z,error=function(e) NA)
-  w2<-function(...){survKM_minus(...)^rho*(1-survKM_minus(...))^gamma}
-  wi_si_cor_est[l]<- WLR.test.cor(survival=data_interim$survival,delta=data_interim$delta,trt=data_interim$trt,w2=w2)
-  
-  wlrt.final[l]<- tryCatch(FH.test(survival=data_final$survival,delta=data_final$delta,trt=data_final$trt,rho=rho,gamma=gamma)$Z,error=function(e) NA)
-  slrt.final[l]<- tryCatch(FH.test(survival=data_final$survival,delta=data_final$delta,trt=data_final$trt,rho=0,gamma=0)$Z,error=function(e) NA)
-  wf_sf_cor_est[l]<- WLR.test.cor(survival=data_final$survival,delta=data_final$delta,trt=data_final$trt,w2=w2)
-  wi_wf_cor_est[l]<-sqrt(I_t(data_ref=data_final,data_check= data_interim,rho=rho,gamma=gamma)/I_t(data_ref=data_final,data_check = data_final,rho=rho,gamma=gamma)  )
- 
-  si_sf_cor_est[l]<-sqrt(fixed_death_p) 
- 
-  wi_sf_cor_est[l]<-wi_si_cor_est[l]*si_sf_cor_est[l]
-  
-  wf_si_cor_est[l]<-wi_si_cor_est[l]*wi_wf_cor_est[l]
-  
-  # Data-driven alpha spending: 
-  Sigma_v[l,]<-c(wi_si_cor_est[l],si_sf_cor_est[l],wi_sf_cor_est[l],wf_si_cor_est[l],wi_wf_cor_est[l],wf_sf_cor_est[l])
-  # Sigma0_v<-1:6
-  Sigma<-matrix(1, ncol=4,nrow=4)
-  Sigma[upper.tri(Sigma)]<- Sigma_v[l,]
-  Sigma[lower.tri(Sigma)]<- t(Sigma)[lower.tri(t(Sigma))]
-  # O'Brien and Fleming test (OBF)
-  z_alpha_est[l,]<-Maxcombo.bd(Sigma0 = Sigma,index=c(1,1,2,2),alpha_sp=c(pnorm(z[1],lower.tail = F),alpha))$z_alpha
-  
-  z1_est[l]<- z_alpha_est[l,1]
-  z2_est[l]<- z_alpha_est[l,2]
-  
-  # Invert the sign to make most test statistics positive under the alternative hypothesis
-  maxcombo.interim<-max(-wlrt.interim[l],-slrt.interim[l])
-  maxcombo.final<-max(-wlrt.final[l],-slrt.final[l])
-  maxcombo.interim.dec[l]<-(maxcombo.interim>z1_est[l])
-  maxcombo.final.dec[l]<-(maxcombo.final>z2_est[l])
-  
-  # For only one-stage case
-  z_final_est[l]<-Maxcombo.bd(Sigma0 = Sigma[3:4,3:4],index=c(1,1),alpha_sp=c(alpha))$z_alpha
-  maxcombo.final.dec.onestep[l]<-(maxcombo.final>z_final_est[l])
-  
-  #setTxtProgressBar(pb, l)
-}
-#close(pb)
-
-sum(!complete.cases(wlrt.interim)) 
-#> [1] 0
-sum(!complete.cases(wlrt.final)) 
-#> [1] 0
-sum(!complete.cases(slrt.interim)) 
-#> [1] 0
-sum(!complete.cases(slrt.final)) 
-#> [1] 0
-
-maxcombo.interim<-pmin(wlrt.interim,slrt.interim) # need to take the inverse sign
-maxcombo.final<-pmin(wlrt.final,slrt.final)
-
-(wi_si_cor<-cor(wlrt.interim,slrt.interim,use="complete.obs")) # wlrt.interim,slrt.interim
-#> [1] 0.8302514
-mean(wi_si_cor_est)
-#> [1] 0.8323751
-wi_si_cor_pred
-#> [1] 0.8307763
-
-(wf_sf_cor<-cor(wlrt.final,slrt.final,use="complete.obs"))     # wlrt.final,slrt.final
-#> [1] 0.8513941
-mean(wf_sf_cor_est)
-#> [1] 0.850556
-wf_sf_cor_pred
-#> [1] 0.8495938
-
-(si_sf_cor<-cor(slrt.interim,slrt.final,use="complete.obs"))   # slrt.interim,slrt.final
-#> [1] 0.777648
-mean(si_sf_cor_est)
-#> [1] 0.7745967
-si_sf_cor_pred
-#> [1] 0.7739359
-
-(wi_wf_cor<-cor(wlrt.interim,wlrt.final,use="complete.obs"))   # wlrt.iterim,wlrt.final
-#> [1] 0.6205095
-mean(wi_wf_cor_est)
-#> [1] 0.620059
-#mean(wi_wf_cor_est2)
-wi_wf_cor_pred
-#> [1] 0.6181095
-
-(wi_sf_cor<-cor(wlrt.interim,slrt.final,use="complete.obs"))  # wlrt.interim and slrt.final
-#> [1] 0.6426304
-mean(wi_sf_cor_est)
-#> [1] 0.644755
-wi_sf_cor_pred
-#> [1] 0.6429676
-
-(wf_si_cor<-cor(wlrt.final,slrt.interim,use="complete.obs"))   # wlrt.final and slrt.interim
-#> [1] 0.5213978
-mean(wf_si_cor_est)
-#> [1] 0.516105
-wf_si_cor_pred
-#> [1] 0.5135108
-
-# mi: maxcombo at interim; mf: maxcombo at final
-(mi_mf_cor<-cor(maxcombo.interim,maxcombo.final,use="complete.obs")) 
-#> [1] 0.6491688
-
-## Good
-wi_si_cor*si_sf_cor
-#> [1] 0.6456433
-wi_sf_cor
-#> [1] 0.6426304
-wi_sf_cor_pred
-#> [1] 0.6429676
-
-
-## Good
-wi_si_cor*wi_wf_cor
-#> [1] 0.5151789
-wf_si_cor
-#> [1] 0.5213978
-wf_si_cor_pred
-#> [1] 0.5135108
-
-
-
-(wlrt1<-mean(-wlrt.final>qnorm(0.025,lower.tail = F),na.rm=T)) 
-#> [1] 0.9107
-(wlrt2<-1-mean((-wlrt.interim)<z[1]&(-wlrt.final)<z[2],na.rm=T)) 
-#> [1] 0.911
-(wlrt2_interim<-1-mean(-wlrt.interim<z[1],na.rm=T)) 
-#> [1] 0.4062
-
-
-(slrt1<-mean(-slrt.final>qnorm(0.025,lower.tail = F),na.rm=T))
-#> [1] 0.833
-(slrt2<-1-mean((-slrt.interim)<z[1]&(-slrt.final)<z[2],na.rm=T)) 
-#> [1] 0.8256
-(slrt2_interim<-1-mean(-slrt.interim<z[1],na.rm=T) )
-#> [1] 0.2446
-
-
-(mc1<-mean(-maxcombo.final>qnorm(0.025,lower.tail = F),na.rm=T))
-#> [1] 0.9262
-(mc2<-1-mean((-maxcombo.interim)<z[1]&(-maxcombo.final)<z[2],na.rm=T)) 
-#> [1] 0.9249
-(mc2_interim<-1-mean(-maxcombo.interim<z[1],na.rm=T)) 
-#> [1] 0.434
-
-interim_pred
-#> [1] 12.3
-mean(interim_time,na.rm = T)
-#> [1] 12.39335
-final_pred
-#> [1] 18
-mean(final_time,na.rm = T)
-#> [1] 18.04584
-
-
-(mc1_pred<-mean(-maxcombo.final>z_final_alpha_pred,na.rm=T) )
-#> [1] 0.8988
-(mc2_pred<-1-mean((-maxcombo.interim)<z_alpha_pred[1]&(-maxcombo.final)<z_alpha_pred[2],na.rm=T)) 
-#> [1] 0.8933
-(mc2_interim_pred<-1-mean(-maxcombo.interim<z_alpha_pred[1],na.rm=T) )
-#> [1] 0.3682
-
-
-(mc1_est<-mean(maxcombo.final.dec.onestep))
-#> [1] 0.899
-(mc2_est<-mean(maxcombo.interim.dec)+mean(maxcombo.final.dec)-mean(maxcombo.interim.dec*maxcombo.final.dec))
-#> [1] 0.8936
-(mc2_interim_est<-mean(maxcombo.interim.dec))
-#> [1] 0.3683
-
-options(digits=5)
-
-out<-rbind(size_wlrt=size_FH_lower[[1]],size_slrt=size_FH_upper[[1]],n_FH,n_event_FH,sum_D,old_z1=z[1],old_z2=z[2],old_final_z=qnorm(p=0.975,lower.tail =T),
-           z_alpha_pred1=z_alpha_pred[1],z_alpha_pred2=z_alpha_pred[2],z_final_alpha_pred,z1_est_mean=mean(z1_est),z2_est_mean=mean(z2_est),z_final_est=mean(z_final_est),z1_est_sd=sd(z1_est),z2_est_sd=sd(z2_est),z_final_sd=sd(z_final_est),wi_si_cor,wi_si_cor_est=mean(wi_si_cor_est),wi_si_cor_pred,
-           wf_sf_cor,wf_sf_cor_est=mean(wf_sf_cor_est),
-           wf_sf_cor_pred,si_sf_cor,si_sf_cor_est=mean(si_sf_cor_est),
-           si_sf_cor_pred,wi_wf_cor,wi_wf_cor_est=mean(wi_wf_cor_est),
-           wi_wf_cor_pred,wi_sf_cor,wi_sf_cor_est=mean(wi_sf_cor_est),
-           wi_sf_cor_pred,wf_si_cor,wf_si_cor_est=mean(wf_si_cor_est),
-           wf_si_cor_pred,mi_mf_cor,interim_pred,interim_time=mean(interim_time,na.rm = T),
-           final_pred,final_time=mean(final_time,na.rm = T),
-           wlrt1,wlrt2,wlrt2_interim,
-           slrt1,slrt2,slrt2_interim,
-           mc1,mc2,mc2_interim,
-           mc1_pred,mc2_pred,mc2_interim_pred,
-           mc1_est,mc2_est,mc2_interim_est)
-out
-#>                          [,1]
-#> size_wlrt          8.7200e+02
-#> size_slrt          1.1240e+03
-#> n_FH               9.2700e+02
-#> n_event_FH         5.9700e+02
-#> sum_D              6.4332e-01
-#> old_z1             2.5718e+00
-#> old_z2             1.9921e+00
-#> old_final_z        1.9600e+00
-#> z_alpha_pred1      2.7395e+00
-#> z_alpha_pred2      2.1773e+00
-#> z_final_alpha_pred 2.1353e+00
-#> z1_est_mean        2.7388e+00
-#> z2_est_mean        2.1754e+00
-#> z_final_est        2.1332e+00
-#> z1_est_sd          9.4386e-04
-#> z2_est_sd          1.9991e-03
-#> z_final_sd         8.8817e-04
-#> wi_si_cor          8.3025e-01
-#> wi_si_cor_est      8.3238e-01
-#> wi_si_cor_pred     8.3078e-01
-#> wf_sf_cor          8.5139e-01
-#> wf_sf_cor_est      8.5056e-01
-#> wf_sf_cor_pred     8.4959e-01
-#> si_sf_cor          7.7765e-01
-#> si_sf_cor_est      7.7460e-01
-#> si_sf_cor_pred     7.7394e-01
-#> wi_wf_cor          6.2051e-01
-#> wi_wf_cor_est      6.2006e-01
-#> wi_wf_cor_pred     6.1811e-01
-#> wi_sf_cor          6.4263e-01
-#> wi_sf_cor_est      6.4475e-01
-#> wi_sf_cor_pred     6.4297e-01
-#> wf_si_cor          5.2140e-01
-#> wf_si_cor_est      5.1611e-01
-#> wf_si_cor_pred     5.1351e-01
-#> mi_mf_cor          6.4917e-01
-#> interim_pred       1.2300e+01
-#> interim_time       1.2393e+01
-#> final_pred         1.8000e+01
-#> final_time         1.8046e+01
-#> wlrt1              9.1070e-01
-#> wlrt2              9.1100e-01
-#> wlrt2_interim      4.0620e-01
-#> slrt1              8.3300e-01
-#> slrt2              8.2560e-01
-#> slrt2_interim      2.4460e-01
-#> mc1                9.2620e-01
-#> mc2                9.2490e-01
-#> mc2_interim        4.3400e-01
-#> mc1_pred           8.9880e-01
-#> mc2_pred           8.9330e-01
-#> mc2_interim_pred   3.6820e-01
-#> mc1_est            8.9900e-01
-#> mc2_est            8.9360e-01
-#> mc2_interim_est    3.6830e-01
-title
-#> [1] "20191218_A1"
-#write.csv(out,paste0(title,".csv"))
+# Obtain the settings from exact prediction
+setting_exact <- GSMC_design(
+  FHweights,
+  interim_ratio,
+  error_spend,
+  eps, 
+  p, 
+  b, 
+  tau, 
+  omega,
+  lambda,
+  lambda.trt,
+  rho, 
+  gamma,
+  beta,
+  stoch = F # disable stochastic approach
+)
+# Boundaries at each stage
+setting_exact$z_alpha_pred
+#> [1] 2.867160 2.694316 2.548900 2.316180
+# Event numbers to pause/stop
+setting_exact$d_fixed
+#> [1] 189 220 252 314
+
+# Boundary if only consider the last stage (without interim stages)
+setting_exact$z_final_alpha_pred
+#> [1] 2.135569
+
+# Predicted type I error at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_exact$Sigma0[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     0, # mean is 0 under null
+     setting_exact$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_exact$interim_pred0), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_exact$n_FH)
+   })
+#> [1] 0.004010273 0.008090862 0.013413109 0.024922578
+# vs. the designed errors spent at each stage
+error_spend
+#> [1] 0.004035615 0.008187950 0.013471082 0.025000000
+# Predicted power at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_exact$Sigma1[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     setting_exact$mu1[1:(n_FHweights * (stage))],
+     setting_exact$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_exact$interim_pred1), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_exact$n_FH)
+   })
+#> [1] 0.2906341 0.5054211 0.6794938 0.9001279
 ```
 
 ## References
@@ -795,8 +257,8 @@ title
     Design and monitoring of survival trials in complex scenarios.
     Statistics in medicine, 38(2), 192-209.
 
-5.  Wang, L., Luo, X., & Zheng, C. (2019). A Simulation-free Group
+5.  Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group
     Sequential Design with Max-combo Tests in the Presence of
-    Non-proportional Hazards. arXiv preprint arXiv:1911.05684.
+    Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 
-Dependent R packages:
+Other relevant R packages:

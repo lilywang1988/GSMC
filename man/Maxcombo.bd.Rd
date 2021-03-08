@@ -7,17 +7,17 @@
 Maxcombo.bd(Sigma0, index, alpha_sp, n.rep = 5)
 }
 \arguments{
-\item{Sigma0}{Correlation matrix for all the test statistics.}
+\item{Sigma0}{correlation matrix for all the test statistics.}
 
-\item{index}{Vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.}
+\item{index}{vector of non-decreasing integer starting from 1 to indicate which stage each column or row of the correlation matrix \code{Sigma0} corresponds to.}
 
-\item{alpha_sp}{Vector of cumulative errors to spend up to each stage.}
+\item{alpha_sp}{vector of cumulative errors to spend up to each stage.}
 
 \item{n.rep}{number of repeats to take the median for output since the called likelihood generator of a multivariate normal distribution \code{\link[mvtnorm]{pmvnorm}} is not determinant. The default \code{n.rep} value is 5.}
 }
 \value{
-\item{z_alpha}{Boundary values for all the stages.}
-\item{z_alpha_vec}{Boundary values for all the test statistics following the \code{index}. }
+\item{z_alpha}{boundary values for all the stages.}
+\item{z_alpha_vec}{boundary values for all the test statistics following the \code{index}. }
 }
 \description{
 Boundary calculation for interim analysis with max-combo tests based on correlation matrix and the alpha spending function.

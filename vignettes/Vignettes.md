@@ -8,7 +8,7 @@ tests in the presence of non-proportional hazards
 
 This R package is to implement the proposed [simulation-free method for
 group sequential design with maxcombo
-tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")(GS-MC).
+tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!")(GS-MC).
 The goal here is to improve the detection power of the weighted log-rank
 tests (WLRTs) when the non-proportional hazards are present. Moreover,
 the method is simulation-free, and allows multiple checks (interims)
@@ -65,7 +65,7 @@ library(GSMC)
   - Two (M=2) tests are in the combo: \(G_{0,0}(t)\) and \(G_{0,1}(t)\)
   - Two (K=2) stages are included: one interim stage and one final stage
   - The codes I used to prepare Figure 2 in the [methodology
-    paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!")
+    paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!")
 
 <!-- end list -->
 
@@ -233,7 +233,7 @@ data_plot<-data.frame(data_n,data_d,index=index,eps.ls=rep(eps.ls,3))
 ## Vignette 2: simulation sample for GS-MC (repeat the results in the paper\!)
 
   - The codes for all the tables in the
-    [paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the tedious methodology paper!").
+    [paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!").
 
   - 48 different cases, with codes in form of S/E in each entry cell,
     where S stands for the code of the stochastic prediction method, and

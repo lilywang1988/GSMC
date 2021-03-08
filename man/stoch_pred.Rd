@@ -23,30 +23,30 @@ stoch_pred.cov(
 )
 }
 \arguments{
-\item{eps}{Delayed treatment effect time.}
+\item{eps}{delayed treatment effect time.}
 
-\item{p}{Probability of treatment assignment.}
+\item{p}{probability of treatment assignment.}
 
-\item{b}{The number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.}
+\item{b}{the number of sub-intervals at each time point, the larger the finer splitting for more accurate computation. Usually \eqn{b = 30} is sufficient.}
 
-\item{omega}{The minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}.}
+\item{omega}{the minimum follow-up time for all the patients. Note that Hasegawa(2014) assumes that the accrual is uniform between time 0 and R, and there does not exist any censoring except for the administrative censoring at the ending time \eqn{\tau}. Thus this value omega is equivalent to \code{tau-R}.}
 
-\item{lambda}{The hazard for the control group.}
+\item{lambda}{the hazard for the control group.}
 
-\item{theta}{The hazard ratio after the delayed time \code{eps} for the treatment arm.}
+\item{theta}{the hazard ratio after the delayed time \code{eps} for the treatment arm.}
 
-\item{rho, rho1, rho2}{The first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
+\item{rho, rho1, rho2}{the first parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
 
-\item{gamma, gamma1, gamma2}{The second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
+\item{gamma, gamma1, gamma2}{the second parameter for Fleming Harrington weighted log-rank test:\eqn{W(t)=S^\rho(t^-)(1-S(t^-))^\gamma}.}
 
-\item{R}{The accrual period.}
+\item{R}{the accrual period.}
 }
 \value{
-\item{sum_D}{The mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
-\item{inf or covariance}{The information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
-\item{E.star}{The unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of fomula (8) in Wang et al(2021).}
-\item{trt_vs_ctrl_N}{The ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
-\item{t_vec}{The time sequence corresponding to \code{trt_vs_ctrl_N}.}
+\item{sum_D}{the mean expected event ratio. Once being multiplied by \code{n}, it will become the stochastically predicted event size. }
+\item{inf or covariance}{the information/variance or covariance (averaged for each subject), should be multiplied by \code{n}, which gives the stochastically predicted information. }
+\item{E.star}{the unit mean, corresponding to \eqn{E^*} in Hasegawa(2014), or the \eqn{\tilde{\mu}} of formula (8) in Wang et al(2021).}
+\item{trt_vs_ctrl_N}{the ratio of the samples sizes between the two arms, treatment vs control, corresponding to the time vector \code{t_vec}.}
+\item{t_vec}{the time sequence corresponding to \code{trt_vs_ctrl_N}.}
 }
 \description{
 A stochastic-process way of prediction of the expected event ratio (\eqn{D}), mean difference (\eqn{\mu}), and the information(variance) using \code{stoch_pred} or the covariance using \code{stoch_pred.cov}.

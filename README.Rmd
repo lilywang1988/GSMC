@@ -1,6 +1,6 @@
 ---
   title: "R package GSMC: a simulation-free group sequential design with max-combo tests in the presence of non-proportional hazards"
-  author: "[Lili Wang](https://lilywang.info)"
+  author: "[Lili Wang](mailto:lilywang@umich.edu)"
   date: "`r Sys.Date()`"
   output: github_document
 ---
@@ -17,25 +17,22 @@ knitr::opts_chunk$set(collapse = TRUE,
 
 This R package is to implement the proposed [simulation-free method for group sequential design with maxcombo tests](https://arxiv.org/abs/1911.05684 "Hey, direct me to the paper!")(GS-MC). The goal here is to improve the detection power of the weighted log-rank tests (WLRTs) when the non-proportional hazards are present. Moreover, the method is simulation-free, and allows multiple checks (interims) before ending the study. 
 
-This R package is currently dependent on other R packages including [mvtnorm][3] and my another package on github [IAfrac][1]. I hope that this package will be improved gradually please let us know your feedback. 
+For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find another R package [IAfrac][1]. The recent version (>= 0.2.1) has all the functions in package `IAfrac` imported already so there is no need to attach it separately. 
 
-For details about the calculation of the information and covariance using estimation (data-driven) and prediction methods please find the README file of [IAfrac][1]. 
-
+We hope this package will be improved gradually. Please let us know your feedback. 
 
 
 ## Preparation
 
-To install and use this R package from Github, you will need to install another R package "devtools" and two packages on Github: [nphsim][2], [IAfrac][1]. Please uncomment the codes to install them. 
+To install and use this R package from Github, please uncomment the codes. 
 
-```{r installation, results = "hide",message=FALSE}
+```{r installation, results = "hide", message=FALSE}
 # install.packages("devtools")
 # library(devtools)
+# 
+# Optional: to obtain the expected errors spent at each stage
 # install.packages("gsDesign")
 library(gsDesign) 
-
-# Generate data following nonproportional hazards
-# install_github("keaven/nphsim")
-library(nphsim) 
 
 # Information and covariance calculation; sample size computation using the Hasegawa proposal
 # install_github("lilywang1988/GSMC")
@@ -43,52 +40,54 @@ library(GSMC)
 
 ```
 
-## Three different scenarios
+## Sample size and threshold prediction for three tests and 4 stages (3 interim and 1 final)
 
-1. Max-combo with interim stages (group sequential design)
-2. Max-combo without interim stages (not a group sequential design)
-3. One weighted log-rank test with interim stages (group sequential design)
-4. One weighted log-rank test without interim stages (not a group sequential design)
+The detailed difference between the two prediction approaches can be found in the [methodology paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!"). 
 
+To sum up, the differences include:
+  1. The exact method is faster.
+  2. The exact approach is limited to piece-wise exponential distribution. 
+  3. When the number of subintervals at each time unit (or value b) is large in stochastic approach, both methods produce very comparable results. 
 
-## Sample size and threshold prediction for three tests and 3 stages (2 interim + 1 final)
+### Stochastic prediction approach
+We consider three different Fleming Harrington type weighted log-rank tests, and **the first one must be the simple log-rank test**. We will use the event number ratios (surrogate information fractions in the Hasegawa 2016 paper) to monitor the stopping time points. 
 
-```{r prediction}
+```{r prediction stoch}
 ### Parameters
+# The first pair of FHweight parameters must be a simple log-rank test
 FHweights <- list(
-  c(0,0),
+  c(0,0), # must be c(0,0)
   c(0,1),
   c(1,0)
 )
 n_FHweights <- length(FHweights)
 
-# stop when what proportion of the events have been observed.
-fixed_death_p <-  c(0.6, 0.7, 0.8)
-interim_ratio <- c(fixed_death_p,1)
+# stop when what proportions of the events have been observed.
+interim_ratio <- c(0.6, 0.7, 0.8, 1)
 n_stage <- length(interim_ratio)
 
-# treatment assignment.
+# treatment assignment
 p <- 1/2 
-# end of the study, chronological assuming it's on the alternative arm.
+# end of the study, chronological, assuming it's on the alternative arm
 tau <- 18
-# end of the accrual period, chronological.
+# end of the accrual period, chronological
 R <- 14 
-# minimum potential follow-up time, not considering dropouts or other subject-specific censoring.
+# minimum potential follow-up time
 omega <- (tau-R) 
-# waiting time before the change point: can be the delayed effect or the crossing effect
+# waiting time before the delayed effect starts
 eps <- 2
 # event hazard of the control arm.
 lambda <- log(2)/6 
 # hazard ratio after the change point eps under the alternative hypothesis. 
 theta <- 0.6 
 # event hazard for the treatment arm under the alternative hypothesis and after the change point eps.
-lambda.trt <- lambda*theta  
-# type I error under the control.
+lambda.trt <- lambda * theta  
+# cumulative type I error under the control.
 alpha <- 0.025 
-# type II error under the alternative. 
+# cumulative type II error under the alternative. 
 beta <- 0.1 
 
-# Obtain the cumulative errors spent at each stage
+# Obtain the cumulative errors spent at each stage following O\'Brien-Fleming
 x <- gsDesign(
   k = n_stage, 
   test.type = 1, 
@@ -104,14 +103,12 @@ error_spend <- cumsum(x$upper$prob[,1])
 error_spend[length(error_spend)] <- alpha 
 
 
-# number of subintervals for a time unit
+# number of subintervals for a time unit, the larger the finer 
+# and more accurate; 30 should be good enough for most cases
 b <- 30
-c = exp(-lambda*(1-theta)*eps) # the c constant for piece-wise exponential hazard and survival curves calculation
-### Tests
 
-### Pause at proportions
-
-res <- GSMC_design(
+# Obtain the settings from stochastic prediction
+setting_stoch <- GSMC_design(
   FHweights,
   interim_ratio,
   error_spend,
@@ -125,23 +122,105 @@ res <- GSMC_design(
   rho, 
   gamma,
   beta,
-  stoch = F
+  stoch = T
 )
+# Boundaries at each stage
+setting_stoch$z_alpha_pred
+# Event numbers to pause/stop
+setting_stoch$d_fixed
+
+# Boundary if only consider the last stage (without interim stages)
+setting_stoch$z_final_alpha_pred
+
+# Predicted type I error at each stages
+sapply(1:n_stage, function(stage){
+   1-Maxcombo.beta.n(
+     setting_stoch$Sigma0[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     0, # mean is 0 under null
+     setting_stoch$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_stoch$interim_pred0), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_stoch$n_FH)
+   })
+# vs. the designed errors spent at each stage
+error_spend
+# Predicted power at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_stoch$Sigma1[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     setting_stoch$mu1[1:(n_FHweights * (stage))],
+     setting_stoch$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_stoch$interim_pred1), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_stoch$n_FH)
+   })
 
 ```
 
+### Exact prediction approach
 
+```{r prediction exact}
+# Obtain the settings from exact prediction
+setting_exact <- GSMC_design(
+  FHweights,
+  interim_ratio,
+  error_spend,
+  eps, 
+  p, 
+  b, 
+  tau, 
+  omega,
+  lambda,
+  lambda.trt,
+  rho, 
+  gamma,
+  beta,
+  stoch = F # disable stochastic approach
+)
+# Boundaries at each stage
+setting_exact$z_alpha_pred
+# Event numbers to pause/stop
+setting_exact$d_fixed
 
-### Sample size and threshold prediction for max-combo tests without interim analysis
+# Boundary if only consider the last stage (without interim stages)
+setting_exact$z_final_alpha_pred
 
+# Predicted type I error at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_exact$Sigma0[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     0, # mean is 0 under null
+     setting_exact$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_exact$interim_pred0), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_exact$n_FH)
+   })
+# vs. the designed errors spent at each stage
+error_spend
+# Predicted power at each stage
+sapply(1:length(interim_ratio), function(stage){
+   1-Maxcombo.beta.n(
+     setting_exact$Sigma1[1:(n_FHweights * (stage)), 
+                          1:(n_FHweights * (stage))],
+     setting_exact$mu1[1:(n_FHweights * (stage))],
+     setting_exact$z_alpha_vec_pred[1:(n_FHweights * (stage))],
+     rep(
+       unlist(setting_exact$interim_pred1), 
+       each = n_FHweights)[1:(n_FHweights * (stage))],
+     R,
+     setting_exact$n_FH)
+   })
 
-
-### Sample size and threshold computation for weighted log-rank tests without interim analysis
-
-
-
-
-
+```
 
 
 ## References
@@ -155,7 +234,7 @@ res <- GSMC_design(
 
 5. Wang, L., Luo, X., & Zheng, C. (2021). A Simulation-free Group Sequential Design with Max-combo Tests in the Presence of Non-proportional Hazards. Journal of Pharmaceutical Statistics.
 
-Dependent R packages:
+Other relevant R packages:
 
 [1]: https://github.com/lilywang1988/IAfrac 
 [2]: https://github.com/keaven/nphsim
