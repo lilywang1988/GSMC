@@ -59,13 +59,13 @@ paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper
 ### Stochastic prediction approach
 
 We consider three different Fleming Harrington type weighted log-rank
-tests, and **the first one must be the simple log-rank test**. We will
+tests, and **the first one must be the standard log-rank test**. We will
 use the event number ratios (surrogate information fractions in the
 Hasegawa 2016 paper) to monitor the stopping time points.
 
 ``` r
 ### Parameters
-# The first pair of FHweight parameters must be a simple log-rank test
+# The first pair of FHweight parameters must be a standard log-rank test
 FHweights <- list(
   c(0,0), # must be c(0,0)
   c(0,1),
@@ -137,7 +137,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.841907 2.699271 2.555497 2.315949
+#> [1] 2.877891 2.691192 2.549678 2.314415
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -159,7 +159,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.004255738 0.008219230 0.013496047 0.024922147
+#> [1] 0.003810478 0.008252976 0.013475474 0.025090654
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -176,7 +176,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2983886 0.5026665 0.6774914 0.9001660
+#> [1] 0.2857845 0.5035939 0.6790512 0.9004592
 ```
 
 ### Exact prediction approach
@@ -201,7 +201,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.864849 2.697527 2.548143 2.314752
+#> [1] 2.852677 2.699476 2.549476 2.315769
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -223,7 +223,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.003880589 0.008149000 0.013585787 0.024971327
+#> [1] 0.004022728 0.008347995 0.013518426 0.024997621
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -240,7 +240,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2914380 0.5044875 0.6795115 0.9003363
+#> [1] 0.2957122 0.5045205 0.6793257 0.9001907
 ```
 
 ## References

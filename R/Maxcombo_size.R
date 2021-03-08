@@ -597,7 +597,7 @@ GSMC_design <- function(
   }
   n_FHweights <- length(FHweights)
   if(FHweights[[1]][1]!=0 || FHweights[[1]][2]!=0){
-    stop("The first weight must be the simple log-rank test: rho = gamma = 0. ")
+    stop("The first weight must be the standard log-rank test: rho = gamma = 0. ")
   } 
   if(!all(unlist(FHweights)%in% c(0,1))){
     stop("Parameters in FHweights must be either 0 or 1. ")

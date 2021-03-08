@@ -51,11 +51,11 @@ The detailed difference between the two prediction approaches can be found in th
   3. When the number of subintervals at each time unit (or value b) is large in stochastic approach, both methods produce very comparable results. 
 
 ### Stochastic prediction approach
-We consider three different Fleming Harrington type weighted log-rank tests, and **the first one must be the simple log-rank test**. We will use the event number ratios (surrogate information fractions in the Hasegawa 2016 paper) to monitor the stopping time points. 
+We consider three different Fleming Harrington type weighted log-rank tests, and **the first one must be the standard log-rank test**. We will use the event number ratios (surrogate information fractions in the Hasegawa 2016 paper) to monitor the stopping time points. 
 
 ```{r prediction stoch}
 ### Parameters
-# The first pair of FHweight parameters must be a simple log-rank test
+# The first pair of FHweight parameters must be a standard log-rank test
 FHweights <- list(
   c(0,0), # must be c(0,0)
   c(0,1),
