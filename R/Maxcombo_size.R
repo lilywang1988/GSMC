@@ -1252,9 +1252,12 @@ GSMC_design <- function(
   z_alpha_vec_pred <- rep(z_alpha_pred, each = n_FHweights)
   ### For only one final stage
   z_final_alpha_pred <- Maxcombo.bd(
-    Sigma0 = Sigma0[(nvalues-n_FHweights+1):nvalues, (nvalues-n_FHweights+1):nvalues],
+    Sigma0 = Sigma0[(nvalues-n_FHweights+1):nvalues, 
+                    (nvalues-n_FHweights+1):nvalues],
     index = c(1, 1),
-    alpha_sp = c(alpha))$z_alpha
+    alpha_sp = c(alpha),
+    n.rep = n.rep
+    )$z_alpha
   
   ## Obtain the predicted mean: 
   ### add the "-" before the calculated E* to be consistent with the later calculations using -WLRT/SLRT other than WLRT/SLRT, to make the test statistics tend to be positive under the alternative. Note need to do so if we are not changing the sign of the WLRT/SLRTs. Just make sure that the means and the test statistics are consistent. 

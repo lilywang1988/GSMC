@@ -137,7 +137,7 @@ setting_stoch <- GSMC_design(
 )
 # Boundaries at each stage
 setting_stoch$z_alpha_pred
-#> [1] 2.855540 2.701437 2.551739 2.315130
+#> [1] 2.856776 2.692030 2.558120 2.314972
 # Event numbers to pause/stop
 setting_stoch$d_fixed
 #> [1] 189 221 252 315
@@ -159,7 +159,7 @@ sapply(1:n_stage, function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.004288906 0.007884917 0.013420704 0.025079343
+#> [1] 0.004256047 0.008361410 0.013283999 0.024973707
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -176,7 +176,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_stoch$n_FH)
    })
-#> [1] 0.2935830 0.5010690 0.6782893 0.9002948
+#> [1] 0.2931478 0.5042741 0.6768744 0.9002630
 ```
 
 ### Exact prediction approach
@@ -201,7 +201,7 @@ setting_exact <- GSMC_design(
 )
 # Boundaries at each stage
 setting_exact$z_alpha_pred
-#> [1] 2.850109 2.701568 2.548501 2.314266
+#> [1] 2.857449 2.699048 2.550232 2.315363
 # Event numbers to pause/stop
 setting_exact$d_fixed
 #> [1] 189 220 252 314
@@ -223,7 +223,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.003916809 0.008039365 0.013472264 0.025109667
+#> [1] 0.004044344 0.008035714 0.013416979 0.025059931
 # vs. the designed errors spent at each stage
 error_spend
 #> [1] 0.004035615 0.008187950 0.013471082 0.025000000
@@ -240,7 +240,7 @@ sapply(1:length(interim_ratio), function(stage){
      R,
      setting_exact$n_FH)
    })
-#> [1] 0.2966166 0.5037712 0.6795027 0.9004317
+#> [1] 0.2940379 0.5044077 0.6790195 0.9002245
 ```
 
 ## References
