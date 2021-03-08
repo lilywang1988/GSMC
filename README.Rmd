@@ -42,11 +42,12 @@ library(GSMC)
 
 ## Sample size and threshold prediction for three tests and 4 stages (3 interim and 1 final)
 
-The detailed difference between the two prediction approaches can be found in the [methodology paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!"). 
+The detailed difference between the two prediction approaches can be found in the [methodology paper](https://arxiv.org/abs/1911.05684 "Hey, direct me to the methodology paper!"):
 
-To sum up, the differences include:
   1. The exact method is faster.
+  
   2. The exact approach is limited to piece-wise exponential distribution. 
+  
   3. When the number of subintervals at each time unit (or value b) is large in stochastic approach, both methods produce very comparable results. 
 
 ### Stochastic prediction approach
